@@ -1,0 +1,44 @@
+{
+  description = "NixOS infrastructure for VPS and dedicated servers";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+    denix.url = "github:yunfachi/denix";
+    denix.inputs.home-manager.follows = "home-manager";
+    home-manager.url = "github:nix-community/home-manager/master";
+    disko.url = "github:nix-community/disko";
+    agenix.url = "github:ryantm/agenix";
+    agenix.inputs.nixpkgs.follows = "nixpkgs";
+    comin.url = "github:nlewo/comin";
+    comin.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs =
+    {
+      self,
+      nixpkgs,
+      denix,
+      ...
+    }@inputs:
+    {
+      nixosConfigurations = denix.lib.configurations {
+        inherit nixpkgs;
+        home-manager = inputs.home-manager;
+        moduleSystem = "nixos";
+        paths = [
+          ./modules
+          ./profiles/krozzzis.nix
+          ./hosts
+        ];
+        extensions = with denix.lib.extensions; [
+          args
+          (base.withConfig { args.enable = true; })
+        ];
+        specialArgs = { inherit inputs; };
+      };
+      checks.x86_64-linux = {
+        vps = self.nixosConfigurations.vps.config.system.build.toplevel;
+        halo = self.nixosConfigurations.halo.config.system.build.toplevel;
+      };
+    };
+}
