@@ -48,6 +48,10 @@ let
           else
             ''
               ${lib.optionalString (port == "80") "use_backend acme if { path_beg /.well-known/acme-challenge/ }"}
+              http-request del-header Forwarded
+              http-request del-header X-Forwarded-For
+              http-request del-header X-Real-IP
+              http-request set-header X-Real-IP %[src]
               http-request set-header X-Forwarded-Proto ${if r.tls == "terminate" then "https" else "http"}
               option forwardfor
               ${lib.optionalString (
