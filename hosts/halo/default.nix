@@ -41,6 +41,7 @@ delib.host {
       "console=ttyS0"
     ];
     services.qemuGuest.enable = true;
+    services.netbird.enable = true;
     # zram has higher priority; this file provides a disk-backed fallback.
     swapDevices = [
       {
