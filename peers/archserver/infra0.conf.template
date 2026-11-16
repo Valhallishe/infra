@@ -12,7 +12,7 @@ H3 = 52194023
 H4 = 52194024
 
 [Peer]
-PublicKey = am5lQhF86BbnrTSuPwtiNH5q65b1nlb0MeObR9ScUAY=
+PublicKey = @HALO_PUBLIC_KEY@
 Endpoint = net.valhallishe.net:51825
 AllowedIPs = 10.1.0.1/32
 PersistentKeepalive = 25

@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+    import-tree.url = "github:vic/import-tree";
     denix.url = "github:yunfachi/denix";
     denix.inputs.home-manager.follows = "home-manager";
     home-manager.url = "github:nix-community/home-manager/master";
@@ -26,9 +27,10 @@
         home-manager = inputs.home-manager;
         moduleSystem = "nixos";
         paths = [
+          ./lib/declarations
           ./modules
-          ./profiles/krozzzis.nix
-          ./hosts
+          ./hosts/halo
+          ./hosts/vps
         ];
         extensions = with denix.lib.extensions; [
           args

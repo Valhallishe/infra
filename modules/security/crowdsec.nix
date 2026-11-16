@@ -1,27 +1,14 @@
 {
   delib,
+  inputs,
+  config,
   lib,
   pkgs,
-  config,
   ...
 }:
 delib.module {
-  name = "infra.security";
-  options.infra.security.enable = delib.boolOption true;
+  name = "infra.security.crowdsec";
   nixos.ifEnabled = {
-    networking.firewall.enable = true;
-    networking.nftables.enable = true;
-    services.openssh = {
-      enable = true;
-      openFirewall = true;
-      settings = {
-        PasswordAuthentication = false;
-        KbdInteractiveAuthentication = false;
-        PermitRootLogin = "no";
-        X11Forwarding = false;
-      };
-    };
-    services.fail2ban.enable = true;
     services.crowdsec = {
       enable = true;
       settings.lapi.credentialsFile = "/var/lib/crowdsec/state/local_api_credentials.yaml";
