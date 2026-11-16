@@ -8,7 +8,9 @@ https://sso.valhallishe.net. Прозрачный SVG повторяет кон�
 - `assets/valhallishe-symbol.svg` — знак без фона, также favicon.
 - `assets/valhallishe-logo.svg` — знак с надписью VALHALLISHE.
 - `assets/background.svg` — фон страницы.
-- `theme.css` — цвета, форма входа, кнопки и адаптация к мобильным экранам.
+- `theme.css` — цвета, форма входа, кнопки, адаптация к мобильным экранам
+  и переводы заголовка входа для языков authentik 2026.2.1. Заголовок
+  задаётся через CSS и переключается вместе с языком страницы.
 - `apply.py`, `restore.py`, `deploy.sh` — применение и откат через Django shell.
 
 Логотип векторизован Potrace 1.16 после выделения оранжевых областей
