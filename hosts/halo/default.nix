@@ -10,12 +10,14 @@ delib.host {
       inputs.comin.nixosModules.comin
       inputs.agenix.nixosModules.default
       ../../domains/valhallishe.net.nix
+      ../../domains/sso.valhallishe.net.nix
     ];
     nixpkgs.hostPlatform = "x86_64-linux";
     system.stateVersion = "26.05";
     networking.hostName = "halo";
     services.comin = {
       enable = true;
+      exporter.listen_address = "127.0.0.1";
       remotes = [
         {
           name = "origin";
@@ -53,6 +55,10 @@ delib.host {
     networking.useDHCP = false;
     networking.useNetworkd = true;
     services.resolved.enable = true;
+    services.resolved.settings.Resolve = {
+      LLMNR = "no";
+      MulticastDNS = "no";
+    };
     age.secrets.halo-network = {
       file = ../../secrets/halo-network.age;
       path = "/run/systemd/network/10-wan.network";
