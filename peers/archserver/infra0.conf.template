@@ -1,5 +1,5 @@
 [Interface]
-Address = 10.77.41.2/32
+Address = 10.1.0.2/32
 PrivateKey = @PRIVATE_KEY@
 Jc = 4
 Jmin = 40
@@ -14,5 +14,5 @@ H4 = 52194024
 [Peer]
 PublicKey = am5lQhF86BbnrTSuPwtiNH5q65b1nlb0MeObR9ScUAY=
 Endpoint = valhallishe.net:51825
-AllowedIPs = 10.77.41.1/32
+AllowedIPs = 10.1.0.1/32
 PersistentKeepalive = 25

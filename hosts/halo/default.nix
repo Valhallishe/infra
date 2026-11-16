@@ -63,7 +63,7 @@ delib.host {
     networking.wireguard.useNetworkd = false;
     networking.wireguard.interfaces.infra0 = {
       type = "amneziawg";
-      ips = [ "10.77.41.1/24" ];
+      ips = [ "10.1.0.1/32" ];
       listenPort = 51825;
       privateKeyFile = config.age.secrets.halo-awg.path;
       extraOptions = {
@@ -81,7 +81,7 @@ delib.host {
         {
           name = "archserver";
           publicKey = "b2vqxA4jD3pXjdiN8/NnzSduwfShgOd+pEA3+YRIP1E=";
-          allowedIPs = [ "10.77.41.2/32" ];
+          allowedIPs = [ "10.1.0.2/32" ];
         }
       ];
     };
