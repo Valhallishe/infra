@@ -229,3 +229,10 @@ NixOS разрешает established/related и DNAT-соединения, пр�
 Кастомная тема VALHALLISHE для authentik на Archserver: прозрачный SVG логотипа,
 надпись, favicon и тёмная палитра с оранжевыми акцентами. Исходники, применение
 и откат описаны в [themes/authentik/README.md](themes/authentik/README.md).
+
+## Страницы ошибок
+
+HAProxy показывает страницы VALHALLISHE для собственных HTTP-ошибок, включая
+неизвестный адрес (404) и недоступный backend (503). Шаблоны и сообщения
+находятся в `lib/error-pages.nix`; логотип берётся из темы authentik. Ответы
+с ошибками от самих сервисов и Cloudflare сохраняют оформление этих сервисов.

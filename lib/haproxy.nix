@@ -129,6 +129,7 @@ in
     global
       log stdout format raw local0
     defaults
+    ${import ./error-pages.nix { inherit lib domain; }}
       log global
       timeout connect 10s
       timeout client 1h
