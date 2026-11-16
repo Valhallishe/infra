@@ -9,11 +9,11 @@ delib.host {
       inputs.disko.nixosModules.disko
       inputs.comin.nixosModules.comin
       inputs.agenix.nixosModules.default
+      ../../domains/valhallishe.net.nix
     ];
     nixpkgs.hostPlatform = "x86_64-linux";
     system.stateVersion = "26.05";
     networking.hostName = "halo";
-    networking.domain = "valhallishe.net";
     services.comin = {
       enable = true;
       remotes = [
