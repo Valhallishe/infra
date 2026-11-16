@@ -11,6 +11,7 @@ delib.host {
       inputs.agenix.nixosModules.default
       ../../domains/valhallishe.net.nix
       ../../domains/sso.valhallishe.net.nix
+      ../../domains/pass.valhallishe.net.nix
     ];
     nixpkgs.hostPlatform = "x86_64-linux";
     system.stateVersion = "26.05";
