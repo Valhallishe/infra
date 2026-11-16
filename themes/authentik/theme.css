@@ -1,0 +1,80 @@
+/* VALHALLISHE · authentik 2026.2.1. Applied to document and component roots. */
+:root, :host, html[data-theme], .pf-theme-dark {
+    color-scheme: dark;
+    --pf-global--primary-color--100: #ff8425;
+    --pf-global--primary-color--200: #ffad67;
+    --pf-global--primary-color--light-100: #ff8425;
+    --pf-global--primary-color--dark-100: #ff8425;
+    --pf-global--link--Color: #ffa15a;
+    --pf-global--link--Color--hover: #ffc18e;
+    --pf-global--active-color--100: #ff8425;
+    --pf-global--BackgroundColor--100: #17110e;
+    --pf-global--BackgroundColor--200: #0b0907;
+    --pf-global--BackgroundColor--300: #221710;
+    --pf-global--BackgroundColor--dark-100: #17110e;
+    --pf-global--BackgroundColor--dark-200: #0b0907;
+    --pf-global--Color--100: #fff0e4;
+    --pf-global--Color--200: #c6ad9c;
+    --pf-global--BorderColor--100: #60402b;
+    --pf-global--BorderColor--200: #38271c;
+    --ak-global--Color--100: #fff0e4;
+    --ak-global--Color--200: #c6ad9c;
+    --ak-global--BackgroundColor--100: #17110e;
+    --ak-global--BackgroundColor--200: #0b0907;
+    --ak-c-login__main--BackgroundColor: #17110e;
+    --ak-c-login__main--Color: #fff0e4;
+    --ak-c-login__main--BoxShadow: 0 28px 90px #0009;
+    --ak-c-login__main-ColumnWidth: min(30rem, calc(100vw - 2rem));
+    --ak-c-login--MaxWidth: 30rem;
+}
+body { background-color: #0b0907; }
+ak-flow-executor::part(main) {
+    background: #17110ef5;
+    border: 1px solid #79411f;
+    border-top: 3px solid #f57922;
+    border-radius: 18px;
+    overflow: hidden;
+}
+ak-flow-executor::part(branding) {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 2rem 1.3rem;
+}
+.branding-logo {
+    width: min(100%, 340px) !important;
+    height: auto !important;
+    max-height: 170px !important;
+    object-fit: contain;
+}
+.pf-c-login__main-header { text-align: center; }
+.pf-c-form-control {
+    color: #fff0e4;
+    background-color: #100c09;
+    border-color: #60402b;
+    border-radius: 7px;
+    min-height: 44px;
+}
+.pf-c-form-control:hover { border-color: #c66a2b; }
+.pf-c-form-control:focus {
+    border-color: #ff8425;
+    box-shadow: 0 0 0 2px #ff842533;
+}
+.pf-c-button.pf-m-primary {
+    --pf-c-button--m-primary--BackgroundColor: #ff8425;
+    --pf-c-button--m-primary--Color: #1c0c03;
+    --pf-c-button--m-primary--hover--BackgroundColor: #ffad67;
+    --pf-c-button--m-primary--hover--Color: #1c0c03;
+    background: linear-gradient(110deg, #ff952e, #f16b1e);
+    color: #1c0c03;
+    font-weight: 700;
+    min-height: 44px;
+    border-radius: 7px;
+}
+.pf-c-button.pf-m-primary:hover { background: #ffad67; }
+:focus-visible { outline: 2px solid #ffad67; outline-offset: 3px; }
+.pf-c-login__main-footer-band { background: #100c09; border-top: 1px solid #38271c; }
+@media (max-width: 35rem) {
+    ak-flow-executor::part(main) { border-radius: 12px; margin-block: 3.5rem 1rem; }
+    ak-flow-executor::part(branding) { padding: 1.5rem 1.2rem 1rem; }
+    .branding-logo { max-height: 145px !important; }
+}

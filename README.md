@@ -219,3 +219,9 @@ NixOS разрешает established/related и DNAT-соединения, пр�
 Пустой `voice_host` в Voice Chat Proxy использует адрес подключения игрока;
 при подключении по `mc.play.${infra.domain}` голосовой трафик идёт на Halo.
 Проверять UDP нужно протоколом Simple Voice Chat, а не TCP-проверкой порта.
+
+## Тема authentik
+
+Кастомная тема VALHALLISHE для authentik на Archserver: прозрачный SVG логотипа,
+надпись, favicon и тёмная палитра с оранжевыми акцентами. Исходники, применение
+и откат описаны в [themes/authentik/README.md](themes/authentik/README.md).
