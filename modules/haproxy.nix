@@ -7,9 +7,9 @@
 }:
 let
   infra = config.infra;
-  routes = lib.filter (route: route.in_node.ip == infra.nodes.${infra.web.node}.ip) (
-    lib.concatMap (service: service.routes) (builtins.attrValues infra.services)
-  );
+  routes = lib.filter (
+    route: route.protocol != "udp" && route.in_node.ip == infra.nodes.${infra.web.node}.ip
+  ) (lib.concatMap (service: service.routes) (builtins.attrValues infra.services));
   proxy = import (inputs.self + "/lib/haproxy.nix") {
     inherit lib routes;
     domain = infra.domain;

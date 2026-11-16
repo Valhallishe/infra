@@ -17,7 +17,7 @@ NixOS ACME автоматически получает сертификаты; D
 
 Для системных сервисов зарезервирована сеть `10.1.0.0/16`. В туннеле `halo` использует `10.1.0.1`, а `archserver` — `10.1.0.2`. Маршруты создаются только к адресам настроенных узлов, а не ко всей зарезервированной сети.
 
-`net.valhallishe.net` указывает на публичный адрес узла VPN. HAProxy на `halo` предоставляет `sso.valhallishe.net` по HTTPS и проксирует запросы к Authentik на `archserver` через туннель. DNS-записи обоих имён управляются у DNS-провайдера; при смене адреса сервера их необходимо обновить. Публично разрешены TCP 22, 80, 443 и UDP 51825 (AmneziaWG).
+`net.valhallishe.net` указывает на публичный адрес узла VPN. HAProxy на `halo` предоставляет `sso.valhallishe.net` по HTTPS и проксирует запросы к Authentik на `archserver` через туннель. DNS-записи обоих имён управляются у DNS-провайдера; при смене адреса сервера их необходимо обновить. Публично разрешены TCP 22, 80, 443, 25565 и UDP 51825, 25565 (AmneziaWG).
 
 HAProxy также предоставляет `pass.valhallishe.net` по HTTPS, проксируя запросы к Vaultwarden на `archserver` через тот же туннель. DNS-запись этого имени управляется у DNS-провайдера.
 
@@ -99,7 +99,8 @@ delib.module {
 Каждый сервис может объявлять несколько маршрутов с разными доменами, портами
 и входными/выходными узлами. Типы и значения по умолчанию заданы в `lib/nixos/web.nix`.
 
-`protocol` задаёт HTTP, HTTPS или TCP. Для HTTPS `tls = "terminate"`
+`protocol` задаёт HTTP, HTTPS, TCP или UDP. UDP-маршруты применяет общий
+модуль nftables, HTTP/TCP — HAProxy. Для HTTPS `tls = "terminate"`
 по умолчанию: HAProxy завершает TLS и передаёт запрос в backend по HTTP.
 `out_protocol = "https"` включает TLS до backend с проверкой CA и имени.
 
@@ -193,3 +194,28 @@ Archserver пока управляется отдельно: после изме
 порта или маскировки нужно обновить его конфигурацию из
 `peers/archserver/infra0.conf.template` с новыми значениями и применить её
 согласованно с NixOS-узлами. Смена подсети меняет адреса сервисов и туннеля.
+
+## Minecraft
+
+`modules/services/minecraft.nix` публикует Java-сервер Valhallishe SMP:
+`mc.play.${infra.domain}:25565` → Halo HAProxy → AWG → Archserver Velocity
+на TCP 25565. Velocity направляет игроков в существующий `survival`.
+HAProxy отправляет PROXY protocol v2 для сохранения адреса игрока;
+на Velocity включён `advanced.haproxy-protocol`. TLS termination и ACME
+для этого TCP-маршрута не используются. DNS-имя должно указывать на Halo;
+дополнительная SRV-запись не требуется при стандартном порте 25565.
+Второй маршрут этого же сервиса публикует Simple Voice Chat Proxy на UDP 25565
+(в текущем конфиге Voice Chat `port=-1`, поэтому используется порт Velocity).
+UDP обрабатывает общий `modules/udp.nix` через схему `lib/udp.nix`: nftables
+выполняет DNAT на узел сервиса и SNAT на AWG-адрес входного узла.
+Это обеспечивает обратный путь через туннель без маршрута по умолчанию на Halo.
+PROXY protocol применяется только к TCP. Bedrock и UDP query не настраиваются.
+
+Firewall входного узла вычисляется из маршрутов: HAProxy открывает TCP-порты,
+UDP-модуль — UDP-порты и включает IPv4 forwarding с `filterForward = true`.
+NixOS разрешает established/related и DNAT-соединения, прочий forwarding запрещён.
+На Archserver Docker уже публикует TCP/UDP 25565 и создаёт разрешающие правила;
+изменять контейнер и его firewall для этого маршрута не требуется.
+Пустой `voice_host` в Voice Chat Proxy использует адрес подключения игрока;
+при подключении по `mc.play.${infra.domain}` голосовой трафик идёт на Halo.
+Проверять UDP нужно протоколом Simple Voice Chat, а не TCP-проверкой порта.
