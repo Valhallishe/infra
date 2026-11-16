@@ -44,7 +44,7 @@ delib.host {
       {
         device = "/swapfile";
         size = 2048;
-        priority = 10;
+        priority = 1;
       }
     ];
 
