@@ -3,6 +3,7 @@ delib.host {
   name = "halo";
   useHomeManagerModule = false;
   myconfig.infra.krozzzis.enable = true;
+  myconfig.infra.web.enable = true;
   nixos = {
     imports = [
       inputs.disko.nixosModules.disko
@@ -12,6 +13,7 @@ delib.host {
     nixpkgs.hostPlatform = "x86_64-linux";
     system.stateVersion = "26.05";
     networking.hostName = "halo";
+    networking.domain = "valhallishe.net";
     services.comin = {
       enable = true;
       remotes = [
