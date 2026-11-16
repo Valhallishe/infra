@@ -1,4 +1,4 @@
-{ delib, inputs, ... }:
+{ delib, inputs, config, ... }:
 delib.host {
   name = "halo";
   useHomeManagerModule = false;
@@ -57,6 +57,33 @@ delib.host {
       file = ../../secrets/halo-network.age;
       path = "/run/systemd/network/10-wan.network";
       mode = "0644";
+    };
+    age.secrets.halo-awg.file = ../../secrets/halo-awg.age;
+    networking.firewall.allowedUDPPorts = [ 51825 ];
+    networking.wireguard.useNetworkd = false;
+    networking.wireguard.interfaces.infra0 = {
+      type = "amneziawg";
+      ips = [ "10.77.41.1/24" ];
+      listenPort = 51825;
+      privateKeyFile = config.age.secrets.halo-awg.path;
+      extraOptions = {
+        Jc = 4;
+        Jmin = 40;
+        Jmax = 70;
+        S1 = 37;
+        S2 = 73;
+        H1 = 52194021;
+        H2 = 52194022;
+        H3 = 52194023;
+        H4 = 52194024;
+      };
+      peers = [
+        {
+          name = "archserver";
+          publicKey = "b2vqxA4jD3pXjdiN8/NnzSduwfShgOd+pEA3+YRIP1E=";
+          allowedIPs = [ "10.77.41.2/32" ];
+        }
+      ];
     };
     systemd.services.systemd-networkd.restartTriggers = [ ../../secrets/halo-network.age ];
   };

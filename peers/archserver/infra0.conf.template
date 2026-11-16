@@ -1,0 +1,18 @@
+[Interface]
+Address = 10.77.41.2/32
+PrivateKey = @PRIVATE_KEY@
+Jc = 4
+Jmin = 40
+Jmax = 70
+S1 = 37
+S2 = 73
+H1 = 52194021
+H2 = 52194022
+H3 = 52194023
+H4 = 52194024
+
+[Peer]
+PublicKey = am5lQhF86BbnrTSuPwtiNH5q65b1nlb0MeObR9ScUAY=
+Endpoint = valhallishe.net:51825
+AllowedIPs = 10.77.41.1/32
+PersistentKeepalive = 25
