@@ -39,6 +39,14 @@ delib.host {
       "console=ttyS0"
     ];
     services.qemuGuest.enable = true;
+    # zram has higher priority; this file provides a disk-backed fallback.
+    swapDevices = [
+      {
+        device = "/swapfile";
+        size = 2048;
+        priority = 10;
+      }
+    ];
 
     networking.useDHCP = false;
     networking.useNetworkd = true;
