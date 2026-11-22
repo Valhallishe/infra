@@ -100,6 +100,8 @@ let
           PEERTUBE_TRUST_PROXY = ''["loopback","10.1.0.1"]'';
           PEERTUBE_SECRET = "\${PEERTUBE_SECRET:?}";
           PEERTUBE_SIGNUP_ENABLED = "false";
+          PEERTUBE_VIDEO_STUDIO_ENABLED = "true";
+          PEERTUBE_VIDEO_STUDIO_REMOTE_RUNNERS_ENABLED = "false";
           PEERTUBE_USER_VIDEO_QUOTA = toString quota;
           PEERTUBE_ADMIN_EMAIL = "admin@valhallishe.net";
           PEERTUBE_INSTANCE_NAME = "Valhallishe Videos";
