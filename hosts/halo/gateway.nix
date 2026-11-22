@@ -13,6 +13,12 @@ delib.host {
       domain = "sso.${domain}";
     }
     {
+      service = "peertube";
+      inbound = "web";
+      outbound = "web";
+      domain = "videos.${domain}";
+    }
+    {
       service = "immich";
       inbound = "web";
       outbound = "web";

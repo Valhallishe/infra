@@ -3,6 +3,7 @@ let
   inherit (pkgs) lib;
   decrypt = file: "${lib.getExe pkgs.age} --decrypt -i /etc/ssh/ssh_host_ed25519_key ${file}";
   authentik = import ./authentik.nix { inherit pkgs decrypt; };
+  peertube = import ./peertube.nix { inherit pkgs decrypt; };
   awg = import ./awg.nix { inherit pkgs decrypt; };
   cominConfig = pkgs.writeText "comin-nixarchserver.json" (builtins.toJSON {
     hostname = "nixarchserver";
@@ -68,7 +69,7 @@ let
 
     directory=/etc/systemd/system
     install -d "$directory/multi-user.target.wants"
-    units=(nixarchserver-awg.service nixarchserver-authentik.service comin.service)
+    units=(nixarchserver-awg.service nixarchserver-authentik.service nixarchserver-peertube.service comin.service)
     for unit in "''${units[@]}"; do
       path="$directory/$unit"
       if [[ -e $path && $(readlink "$path" || :) != /nix/store/*/"$unit" ]]; then
@@ -101,6 +102,7 @@ let
       fi
     done
     systemctl start nixarchserver-awg.service nixarchserver-authentik.service
+    systemctl start nixarchserver-peertube.service
     # Retain the activated closure independently of Comin's next candidate.
     nix-env --profile /nix/var/nix/profiles/nixarchserver --set "$system"
     # Comin restarts itself after recording the deployment when its unit changes.
@@ -110,6 +112,7 @@ pkgs.runCommand "nixarchserver" { } ''
   mkdir -p "$out/bin" "$out/units"
   ln -s ${authentik.unit}/nixarchserver-authentik.service "$out/units/nixarchserver-authentik.service"
   ln -s ${awg.unit}/nixarchserver-awg.service "$out/units/nixarchserver-awg.service"
+  ln -s ${peertube}/nixarchserver-peertube.service "$out/units/nixarchserver-peertube.service"
   ln -s ${cominUnit}/comin.service "$out/units/comin.service"
   ln -s ${preflight} "$out/bin/preflight"
   install -m755 ${activate} "$out/bin/switch-to-configuration"
