@@ -53,6 +53,22 @@ let
       { endpoint = "/.well-known/carddav"; prefix = "carddav"; }
     ]; }];
   });
+  csp = pkgs.writeText "opencloud-csp.yaml" (builtins.toJSON {
+    directives = {
+      default-src = [ "'none'" ];
+      child-src = [ "'self'" ];
+      connect-src = [ "'self'" "blob:" ssoUrl "https://raw.githubusercontent.com/opencloud-eu/awesome-apps/" "https://update.opencloud.eu/" ];
+      font-src = [ "'self'" ];
+      frame-ancestors = [ "'self'" ];
+      frame-src = [ "'self'" "blob:" ssoUrl "https://embed.diagrams.net/" ];
+      img-src = [ "'self'" "data:" "blob:" "https://raw.githubusercontent.com/opencloud-eu/awesome-apps/" ];
+      manifest-src = [ "'self'" ];
+      media-src = [ "'self'" "blob:" ];
+      object-src = [ "'self'" "blob:" ];
+      script-src = [ "'self'" "'unsafe-inline'" ];
+      style-src = [ "'self'" "'unsafe-inline'" "blob:" ];
+    };
+  });
   radicaleConfig = pkgs.writeText "radicale-config" ''
     [server]
     hosts = 0.0.0.0:5232
@@ -76,6 +92,7 @@ let
         environment = {
           OC_URL = public.url;
           PROXY_TLS = "false";
+          PROXY_CSP_CONFIG_FILE_LOCATION = "/etc/opencloud/csp.yaml";
           OC_OIDC_ISSUER = "${ssoUrl}/application/o/opencloud/";
           OC_EXCLUDE_RUN_SERVICES = "idp";
           IDM_CREATE_DEMO_USERS = "false";
@@ -98,6 +115,7 @@ let
           "/run/nixarchserver-opencloud/opencloud.yaml:/etc/opencloud/opencloud.yaml:ro"
           "${storage}/data:/var/lib/opencloud"
           "${proxy}:/etc/opencloud/proxy.yaml:ro"
+          "${csp}:/etc/opencloud/csp.yaml:ro"
           "${apps}:/var/lib/opencloud/web/assets/apps:ro"
           "${theme}:/opt/branding:ro"
         ];

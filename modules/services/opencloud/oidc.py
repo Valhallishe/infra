@@ -15,7 +15,7 @@ with transaction.atomic():
             "invalidation_flow": Flow.objects.get(slug="default-provider-invalidation-flow"),
             "signing_key": CertificateKeyPair.objects.get(name="authentik Self-signed Certificate"),
             "redirect_uris": [RedirectURI("strict", url + p) for p in ("/", "/oidc-callback.html", "/oidc-silent-redirect.html")]
-                + [RedirectURI("regex", r"http://(127\.0\.0\.1|localhost)(:[0-9]+)?(/.*)?"),
+                + [RedirectURI("regex", r"http://(127\.0\.0\.1|localhost)(:\d+)?(/.*)?"),
                    RedirectURI("strict", "oc://android.opencloud.eu"),
                    RedirectURI("strict", "oc://ios.opencloud.eu")],
         },
