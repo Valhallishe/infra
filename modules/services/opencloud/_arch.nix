@@ -82,12 +82,43 @@ let
     [web]
     type = none
   '';
+  welcome = pkgs.runCommand "opencloud-welcome" { } ''
+    mkdir -p "$out"
+    cp ${pkgs.replaceVars ./welcome.html { issuer = "${ssoUrl}/application/o/opencloud/"; }} "$out/index.html"
+  '';
+  nginx = pkgs.writeText "opencloud-nginx.conf" ''
+    events {}
+    http {
+      server {
+        listen 9200;
+        client_max_body_size 0;
+        proxy_request_buffering off;
+        proxy_buffering off;
+        proxy_read_timeout 3600s;
+        proxy_http_version 1.1;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        location = / {
+          if ($request_method != GET) { return 418; }
+          if ($http_accept !~* "text/html") { return 418; }
+          if ($arg_enter = "1") { return 418; }
+          root /srv/welcome;
+          add_header Cache-Control "no-store" always;
+          try_files /index.html =404;
+        }
+        error_page 418 = @opencloud;
+        location @opencloud { proxy_pass http://opencloud:9200; }
+        location / { proxy_pass http://opencloud:9200; }
+      }
+    }
+  '';
   compose = pkgs.writeText "opencloud-compose.json" (builtins.toJSON {
     services = {
       opencloud = {
         image = "opencloudeu/opencloud-rolling:9.2.0@sha256:99698aea6bd88cf28004c773941cf69e2d24da136a3a45f9819b90b60506d14d";
         user = "1000:1000";
-        ports = [ "${backend.address}:${toString backend.port}:9200" ];
         command = [ "server" ];
         environment = {
           OC_URL = public.url;
@@ -120,6 +151,13 @@ let
           "${theme}:/opt/branding:ro"
         ];
         depends_on = [ "radicale" ];
+        restart = "unless-stopped";
+      };
+      gateway = {
+        image = "nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10";
+        ports = [ "${backend.address}:${toString backend.port}:9200" ];
+        volumes = [ "${nginx}:/etc/nginx/nginx.conf:ro" "${welcome}:/srv/welcome:ro" ];
+        depends_on = [ "opencloud" ];
         restart = "unless-stopped";
       };
       radicale = {

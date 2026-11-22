@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Valhallishe Files</title>
+  <link rel="icon" href="/themes/opencloud/assets/symbol.svg">
+  <script>
+    try {
+      const key = 'oc_oAuth.user:@issuer@:valhallishe-opencloud'
+      const session = JSON.parse(localStorage.getItem(key) || 'null')
+      if (session && (session.refresh_token || session.expires_at > Date.now() / 1000)) {
+        window.location.replace('/?enter=1')
+      }
+    } catch (_) {}
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #141414; color: #f5f5f5; font: 16px system-ui, sans-serif; }
+    main { width: min(90vw, 440px); padding: 3rem 2rem; text-align: center; }
+    img { display: block; width: min(280px, 75%); height: auto; margin: 0 auto 1rem; }
+    h1 { margin: 0 0 .65rem; font-size: 1.5rem; }
+    p { margin: 0 0 2rem; color: #ccc; }
+    a { display: inline-block; padding: .8rem 2rem; border-radius: .5rem; background: #ffab65; color: #141414; text-decoration: none; font-weight: 650; }
+    a:focus-visible { outline: 3px solid white; outline-offset: 4px; }
+  </style>
+</head>
+<body><main>
+  <img src="/themes/opencloud/assets/logo.svg" alt="Valhallishe">
+  <h1>Файлы Valhallishe</h1>
+  <p>Файлы, календарь и контакты в одном месте.</p>
+  <a href="/?enter=1">Войти</a>
+</main></body>
+</html>
