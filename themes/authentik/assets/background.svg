@@ -1,1 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs><radialGradient id="glow"><stop stop-color="#69270e" stop-opacity=".36"/><stop offset="1" stop-color="#0b0907" stop-opacity="0"/></radialGradient><pattern id="grid" width="88" height="88" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M88 0H0V88" fill="none" stroke="#ff7a20" stroke-opacity=".035"/></pattern></defs><path fill="#0b0907" d="M0 0h1920v1080H0z"/><ellipse cx="960" cy="470" rx="950" ry="720" fill="url(#glow)"/><path fill="url(#grid)" d="M0 0h1920v1080H0z"/><circle cx="960" cy="540" r="460" fill="none" stroke="#ff7a20" stroke-opacity=".045"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#141414"/>
+</svg>

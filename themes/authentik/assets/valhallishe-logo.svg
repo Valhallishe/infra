@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 295" role="img" aria-labelledby="title"><title id="title">VALHALLISHE</title><defs><linearGradient id="ember" x1="0" y1="0" x2="0.25" y2="1"><stop stop-color="#ff8a22"/><stop offset="1" stop-color="#e34a17"/></linearGradient></defs><svg x="203" y="0" width="194" height="192" viewBox="140 120 970 960"><g transform="translate(0.000000,1254.000000) scale(0.100000,-0.100000)"
-fill="url(#ember)" stroke="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 295" role="img" aria-labelledby="title"><title id="title">VALHALLISHE</title><svg x="203" y="0" width="194" height="192" viewBox="140 120 970 960"><g transform="translate(0.000000,1254.000000) scale(0.100000,-0.100000)"
+fill="#ffab65" stroke="none">
 <path d="M5990 11259 c-964 -69 -1892 -416 -2630 -983 -576 -443 -1048 -996
 -1350 -1578 -359 -696 -524 -1368 -524 -2143 -1 -409 41 -769 119 -1041 l15
 -51 90 12 c49 7 131 25 181 41 81 25 90 30 85 48 -18 61 -77 378 -92 486 -25
@@ -59,4 +59,4 @@ l-39 72 -76 0 c-143 0 -273 47 -388 140 -75 60 -75 58 -6 -112 292 -721 937
 41 -92 74 -95 74 -3 0 -6 -47 -6 -105z"/>
 <path d="M3030 4998 c-55 -52 -180 -138 -199 -138 -5 0 -13 -4 -16 -10 -4 -6
 45 -10 139 -10 l145 0 3 105 c2 66 -1 105 -7 105 -5 -1 -35 -24 -65 -52z"/>
-</g></svg><text x="300" y="265" text-anchor="middle" fill="#ff8425" font-family="DejaVu Sans,Arial,sans-serif" font-size="47" font-weight="700" letter-spacing="7">VALHALLISHE</text></svg>
+</g></svg><text x="300" y="265" text-anchor="middle" fill="#ffab65" font-family="DejaVu Sans,Arial,sans-serif" font-size="47" font-weight="700" letter-spacing="7">VALHALLISHE</text></svg>

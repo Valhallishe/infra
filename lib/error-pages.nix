@@ -1,6 +1,6 @@
 { lib }:
 let
-  symbol = lib.replaceStrings [ ''fill="url(#ember)"'' ] [ ''fill="#ff8425"'' ] (builtins.readFile ../themes/authentik/assets/valhallishe-symbol.svg);
+  symbol = builtins.readFile ../themes/authentik/assets/valhallishe-symbol.svg;
   pages = [
     { code = 400; reason = "Bad Request"; }
     { code = 403; reason = "Forbidden"; }
@@ -22,10 +22,10 @@ let
     <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="dark"><title>${toString page.code} · Valhallishe</title>
     <style>
-      :root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b0907;color:#ff8425}
+      :root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#141414;color:#ffab65}
       *{box-sizing:border-box}body{margin:0;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:1.5rem}
       main{text-align:center}.brand{display:flex;align-items:center;justify-content:center;gap:.9rem;font-size:clamp(1.05rem,5vw,1.5rem);font-weight:750;letter-spacing:.14em}
-      .brand svg{width:3.25rem;height:3.25rem;flex:none}.code{margin:2rem 0 0;font-size:clamp(3rem,12vw,4.5rem);line-height:1;font-weight:750;letter-spacing:.03em;color:#ff8425}
+      .brand svg{width:3.25rem;height:3.25rem;flex:none}.code{margin:2rem 0 0;font-size:clamp(3rem,12vw,4.5rem);line-height:1;font-weight:750;letter-spacing:.03em;color:#ffab65}
     </style></head><body><main><div class="brand">${symbol}<span>VALHALLISHE</span></div>
     <h1 class="code">${toString page.code}</h1>
     </main></body></html>

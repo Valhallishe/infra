@@ -23,13 +23,13 @@
     --ak-global--BackgroundColor--200: #@base00@;
     --ak-c-login__main--BackgroundColor: #@base01@;
     --ak-c-login__main--Color: #@base05@;
-    --ak-c-login__main--BoxShadow: 0 28px 90px #0009;
+    --ak-c-login__main--BoxShadow: none;
     --ak-c-login__main-ColumnWidth: min(30rem, calc(100vw - 2rem));
     --ak-c-login--MaxWidth: 30rem;
 }
 body { background-color: #@base00@; }
 ak-flow-executor::part(main) {
-    background: #@base01@f5;
+    background: #@base01@;
     border: 1px solid #@base03@;
     border-top: 3px solid #@base0D@;
     border-radius: 18px;
@@ -54,17 +54,18 @@ ak-flow-executor::part(branding) {
     border-radius: 7px;
     min-height: 44px;
 }
-.pf-c-form-control:hover { border-color: #@base0F@; }
+.pf-c-form-control:hover { border-color: #@base09@; }
 .pf-c-form-control:focus {
     border-color: #@base0D@;
-    box-shadow: 0 0 0 2px #@base0D@33;
+    outline: 2px solid #@base0D@;
+    outline-offset: 2px;
 }
 .pf-c-button.pf-m-primary {
     --pf-c-button--m-primary--BackgroundColor: #@base0D@;
     --pf-c-button--m-primary--Color: #@base00@;
     --pf-c-button--m-primary--hover--BackgroundColor: #@base09@;
     --pf-c-button--m-primary--hover--Color: #@base00@;
-    background: linear-gradient(110deg, #@base09@, #@base0D@);
+    background: #@base0D@;
     color: #@base00@;
     font-weight: 700;
     min-height: 44px;
