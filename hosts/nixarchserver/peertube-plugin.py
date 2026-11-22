@@ -1,4 +1,5 @@
 import json
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -41,15 +42,12 @@ try:
 except urllib.error.HTTPError as error:
     if error.code != 404:
         raise
-    request("/plugins/install", "POST", {"npmName": plugin})
+    request("/plugins/install", "POST", {"npmName": plugin, "pluginVersion": "2.1.1"})
 
-request("/plugins/" + plugin + "/settings", "PUT", {"settings": {
-    "auth-display-name": "Valhallishe SSO",
-    "discover-url": "https://sso.valhallishe.net/application/o/peertube/.well-known/openid-configuration",
-    "client-id": "peertube",
-    "client-secret": credentials["OIDC_SECRET"],
-    "scope": "openid profile email",
-    "username-property": "preferred_username",
-    "mail-property": "email",
-    "external-id-property": "sub",
-}})
+settings = json.loads(Path(sys.argv[1]).read_text())
+settings["client-secret"] = credentials["OIDC_SECRET"]
+request("/plugins/" + plugin + "/settings", "PUT", {"settings": settings})
+
+policy = request("/plugins/peertube-plugin-valhallishe-publish")
+if not policy["enabled"]:
+    raise RuntimeError("PeerTube publishing policy is disabled")

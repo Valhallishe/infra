@@ -68,8 +68,8 @@ let
     "$system/bin/preflight"
 
     directory=/etc/systemd/system
-    install -d "$directory/multi-user.target.wants"
-    units=(nixarchserver-awg.service nixarchserver-authentik.service nixarchserver-peertube.service comin.service)
+    install -d "$directory/multi-user.target.wants" "$directory/timers.target.wants"
+    units=(nixarchserver-awg.service nixarchserver-authentik.service nixarchserver-peertube.service nixarchserver-peertube-access.service nixarchserver-peertube-access.timer comin.service)
     for unit in "''${units[@]}"; do
       path="$directory/$unit"
       if [[ -e $path && $(readlink "$path" || :) != /nix/store/*/"$unit" ]]; then
@@ -85,7 +85,11 @@ let
         ln -sfn "$source" "$directory/$unit"
         changed+=("$unit")
       fi
-      ln -sfn "../$unit" "$directory/multi-user.target.wants/$unit"
+      case "$unit" in
+        *.timer) ln -sfn "../$unit" "$directory/timers.target.wants/$unit" ;;
+        nixarchserver-peertube-access.service) ;;
+        *) ln -sfn "../$unit" "$directory/multi-user.target.wants/$unit" ;;
+      esac
     done
     systemctl daemon-reload
     if systemctl is-active --quiet awg-quick@infra0.service; then
@@ -97,12 +101,12 @@ let
       changed=("''${changed[@]/nixarchserver-awg.service/}")
     fi
     for unit in "''${changed[@]}"; do
-      if [[ -n $unit && $unit != comin.service ]]; then
+      if [[ -n $unit && $unit != comin.service && $unit != nixarchserver-peertube-access.service ]]; then
         systemctl restart "$unit"
       fi
     done
     systemctl start nixarchserver-awg.service nixarchserver-authentik.service
-    systemctl start nixarchserver-peertube.service
+    systemctl start nixarchserver-peertube.service nixarchserver-peertube-access.timer
     # Retain the activated closure independently of Comin's next candidate.
     nix-env --profile /nix/var/nix/profiles/nixarchserver --set "$system"
     # Comin restarts itself after recording the deployment when its unit changes.
@@ -112,7 +116,9 @@ pkgs.runCommand "nixarchserver" { } ''
   mkdir -p "$out/bin" "$out/units"
   ln -s ${authentik.unit}/nixarchserver-authentik.service "$out/units/nixarchserver-authentik.service"
   ln -s ${awg.unit}/nixarchserver-awg.service "$out/units/nixarchserver-awg.service"
-  ln -s ${peertube}/nixarchserver-peertube.service "$out/units/nixarchserver-peertube.service"
+  ln -s ${peertube.unit}/nixarchserver-peertube.service "$out/units/nixarchserver-peertube.service"
+  ln -s ${peertube.refreshUnit}/nixarchserver-peertube-access.service "$out/units/nixarchserver-peertube-access.service"
+  ln -s ${peertube.timer}/nixarchserver-peertube-access.timer "$out/units/nixarchserver-peertube-access.timer"
   ln -s ${cominUnit}/comin.service "$out/units/comin.service"
   ln -s ${preflight} "$out/bin/preflight"
   install -m755 ${activate} "$out/bin/switch-to-configuration"
