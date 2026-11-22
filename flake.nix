@@ -23,8 +23,15 @@
       denix,
       ...
     }@inputs:
+    let
+      system = "x86_64-linux";
+      nixarchserver = import ./hosts/nixarchserver {
+        pkgs = nixpkgs.legacyPackages.${system};
+        comin = inputs.comin.packages.${system}.comin;
+      };
+    in
     {
-      nixosConfigurations = denix.lib.configurations {
+      nixosConfigurations = (denix.lib.configurations {
         inherit nixpkgs;
         home-manager = inputs.home-manager;
         moduleSystem = "nixos";
@@ -39,9 +46,17 @@
           (base.withConfig { args.enable = true; })
         ];
         specialArgs = { inherit inputs; };
+      }) // {
+        # Comin's Linux flake executor expects this interface.
+        nixarchserver.config = {
+          system.build.toplevel = nixarchserver;
+          services.comin.machineId = null;
+        };
       };
+      packages.x86_64-linux.nixarchserver = nixarchserver;
       packages.x86_64-linux.service-themes = self.nixosConfigurations.halo.config.infra.serviceThemes;
       checks.x86_64-linux = {
+        inherit nixarchserver;
         vps = self.nixosConfigurations.vps.config.system.build.toplevel;
         halo = self.nixosConfigurations.halo.config.system.build.toplevel;
       };
