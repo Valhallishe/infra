@@ -17,8 +17,10 @@ let
           PEERTUBE_WEBSERVER_HTTPS = "true";
           PEERTUBE_TRUST_PROXY = ''["loopback","10.1.0.1"]'';
           PEERTUBE_SECRET = "\${PEERTUBE_SECRET:?}";
-          PEERTUBE_ROOT_USER_PASSWORD = "\${PEERTUBE_ADMIN_PASSWORD:?}";
           PEERTUBE_ADMIN_EMAIL = "admin@valhallishe.net";
+          PEERTUBE_INSTANCE_NAME = "Valhallishe Videos";
+          PEERTUBE_INSTANCE_SHORT_DESCRIPTION = "Видеоплатформа Valhallishe";
+          PEERTUBE_INSTANCE_CUSTOMIZATIONS_CSS = "\${PEERTUBE_BRAND_CSS:?}";
         };
         depends_on.postgres.condition = "service_healthy";
         depends_on.redis.condition = "service_started";
@@ -56,6 +58,11 @@ let
       mkdir -p ${storage}
       ${decrypt ../../secrets/nixarchserver-peertube.age} > /run/nixarchserver-peertube/credentials
     fi
+    logo=$(base64 -w0 ${../../themes/authentik/assets/valhallishe-symbol.svg})
+    export PEERTUBE_BRAND_CSS="my-header .instance-name { font-weight: 700; }
+    my-header .instance-name::before { content: ''; display: inline-block;
+      width: 1.4em; height: 1.4em; vertical-align: middle; margin-inline-end: .45em;
+      background: url(data:image/svg+xml;base64,$logo) center / contain no-repeat; }"
     exec docker compose -p nixarchserver-peertube --env-file /run/nixarchserver-peertube/credentials -f ${compose} "$@"
   '';
 in
