@@ -1,8 +1,5 @@
-{ delib, inputs, ... }:
+{ delib, ... }:
 delib.module {
   name = "infra";
-  nixos.always.imports = [
-    (inputs.import-tree (inputs.self + "/lib/nixos"))
-    (inputs.self + "/infra.nix")
-  ];
+  nixos.always.imports = [ ../infra.nix ];
 }

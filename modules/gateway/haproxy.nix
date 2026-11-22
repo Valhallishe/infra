@@ -6,14 +6,14 @@
 }:
 let
   infra = config.infra;
-  endpoints = import ../lib/service-endpoints.nix { inherit lib infra; };
+  endpoints = import ../../lib/service-endpoints.nix { inherit lib infra; };
   routes = lib.filter (route: route.protocol != "udp") (
-    import ../lib/gateway-routes.nix {
+    import ../../lib/gateway-routes.nix {
       inherit endpoints;
       routes = infra.hosts.${config.networking.hostName}.gateway.routes or [ ];
     }
   );
-  proxy = import ../lib/haproxy.nix {
+  proxy = import ../../lib/haproxy.nix {
     inherit lib routes;
     brand = infra.branding.${infra.hosts.${config.networking.hostName}.branding};
     domain = infra.domain;
@@ -22,6 +22,17 @@ let
 in
 delib.module {
   name = "infra.web";
+  options = { infra.web.enable = delib.boolOption false; };
+
+  nixos.always.options.infra.web = {
+    enable = lib.mkEnableOption "public web hosting";
+    node = lib.mkOption {
+      type = lib.types.str;
+      default = config.infra.hosts.${config.networking.hostName}.node or config.networking.hostName;
+      description = "Overlay node used by this gateway.";
+    };
+  };
+
   nixos.ifEnabled = {
     infra.web.enable = true;
     assertions = proxy.assertions;

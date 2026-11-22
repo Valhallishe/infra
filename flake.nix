@@ -26,12 +26,16 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      topology = (nixpkgs.lib.evalModules { modules = [ ./infra.nix ]; }).config.infra;
+      topology =
+        (nixpkgs.lib.evalModules {
+          specialArgs = { inherit inputs; };
+          modules = [ ./infra.nix ];
+        }).config.infra;
       endpoints = import ./lib/service-endpoints.nix {
         inherit (nixpkgs) lib;
         infra = topology;
       };
-      nixarchserver = import ./hosts/nixarchserver/build.nix {
+      nixarchserver = import ./hosts/nixarchserver/_build.nix {
         inherit pkgs topology endpoints;
         comin = inputs.comin.packages.${system}.comin;
       };
@@ -42,21 +46,12 @@
           inherit nixpkgs;
           home-manager = inputs.home-manager;
           moduleSystem = "nixos";
-          paths = [
-            ./lib/declarations
-            ./modules/awg.nix
-            ./modules/base.nix
-            ./modules/haproxy.nix
-            ./modules/infrastructure.nix
-            ./modules/krozzzis.nix
-            ./modules/secrets.nix
-            ./modules/security
-            ./modules/udp.nix
-            ./hosts/halo/hardware.nix
-            ./hosts/halo/disko.nix
-            ./hosts/halo/network.nix
-            ./hosts/halo/nixos.nix
-            ./hosts/vps
+          useHomeManagerModule = false;
+          extraModules = [
+            (inputs.import-tree [
+              ./hosts
+              ./modules
+            ])
           ];
           extensions = with denix.lib.extensions; [
             args
@@ -74,7 +69,12 @@
       packages.x86_64-linux.nixarchserver = nixarchserver;
       packages.x86_64-linux.bootstrap-secrets = pkgs.writeShellApplication {
         name = "bootstrap-secrets";
-        runtimeInputs = with pkgs; [ age openssh python3 wireguard-tools ];
+        runtimeInputs = with pkgs; [
+          age
+          openssh
+          python3
+          wireguard-tools
+        ];
         text = ''
           exec ${pkgs.python3}/bin/python3 ${./scripts/bootstrap-secrets.py} "$@"
         '';
@@ -83,11 +83,11 @@
         type = "app";
         program = "${self.packages.x86_64-linux.bootstrap-secrets}/bin/bootstrap-secrets";
       };
-      packages.x86_64-linux.inbuxa-config = import ./modules/services/inbuxa/package.nix {
+      packages.x86_64-linux.inbuxa-config = import ./modules/services/inbuxa/_package.nix {
         inherit pkgs endpoints topology;
         hostname = "nixarchserver";
       };
-      packages.x86_64-linux.service-themes = import ./modules/branding/service-themes.nix {
+      packages.x86_64-linux.service-themes = import ./modules/branding/_service-themes.nix {
         inherit pkgs;
         authentikProfile = topology.branding.${topology.hosts.nixarchserver.services.authentik.branding};
         inbuxaProfile = topology.branding.${topology.hosts.nixarchserver.services.inbuxa.branding};

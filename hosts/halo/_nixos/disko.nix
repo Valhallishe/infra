@@ -1,7 +1,5 @@
-{ delib, ... }:
-delib.host {
-  name = "halo";
-  nixos.disko.devices.disk.main = {
+{
+  disko.devices.disk.main = {
     type = "disk";
     device = "/dev/vda";
     content = {

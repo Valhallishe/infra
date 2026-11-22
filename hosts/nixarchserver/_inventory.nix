@@ -1,5 +1,7 @@
 { config, ... }:
 {
+  infra.nodes.archserver.hostId = 2;
+
   infra.hosts.nixarchserver = {
     node = "archserver";
     publicGateway = "halo";

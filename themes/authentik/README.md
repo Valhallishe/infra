@@ -19,7 +19,7 @@ opttolerance 0.3). Растровое изображение в SVG не вст�
 
 ## Применение
 
-Юнит Authentik применяет профиль из `hosts/nixarchserver/default.nix` после проверки
+Юнит Authentik применяет профиль из `hosts/nixarchserver/_inventory.nix` после проверки
 готовности приложения. Для ручного применения из этого каталога:
 
 ```sh

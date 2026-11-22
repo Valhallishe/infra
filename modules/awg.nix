@@ -1,6 +1,5 @@
 {
   delib,
-  inputs,
   config,
   lib,
   pkgs,
@@ -12,6 +11,8 @@ delib.module {
     let
       infra = config.infra;
       cfg = infra.awg;
+      host = infra.hosts.${config.networking.hostName} or null;
+      link = host.services.awg or null;
       network = infra.network;
       node = infra.nodes.${cfg.node};
       peers = lib.genAttrs cfg.peers (name: infra.nodes.${name});
@@ -29,6 +30,25 @@ delib.module {
       '';
     in
     {
+      options.infra.awg = {
+        enable = lib.mkEnableOption "infrastructure AWG overlay" // {
+          default = link != null;
+        };
+        node = lib.mkOption {
+          type = lib.types.str;
+          default = host.node or config.networking.hostName;
+        };
+        peers = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default =
+            if link != null then
+              [ link.peer ]
+            else
+              lib.filter (name: name != cfg.node) (builtins.attrNames infra.nodes);
+          description = "Peer node names, taken from the host inventory when declared.";
+        };
+      };
+
       config = lib.mkIf cfg.enable {
         assertions = [
           {

@@ -1,6 +1,5 @@
 {
   delib,
-  inputs,
   config,
   lib,
   pkgs,
@@ -8,6 +7,10 @@
 }:
 delib.module {
   name = "infra.security.crowdsec";
+  options = {
+    infra.security.crowdsec.enable = delib.boolOption true;
+  };
+
   nixos.ifEnabled = {
     services.crowdsec = {
       enable = true;

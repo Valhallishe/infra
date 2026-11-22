@@ -1,7 +1,5 @@
-{ delib, ... }:
-delib.host {
-  name = "vps";
-  nixos.disko.devices.disk.main = {
+{
+  disko.devices.disk.main = {
     type = "disk";
     # Replace with the whole target disk's stable /dev/disk/by-id/ path.
     device = "/dev/disk/by-id/CHANGE-ME";

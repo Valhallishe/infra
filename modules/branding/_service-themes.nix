@@ -10,7 +10,7 @@ let
   c = colors inbuxaProfile.dark;
   light = colors inbuxaProfile.light;
   nextcloud = colors nextcloudProfile.dark;
-  authentik = import ../services/authentik/branding.nix {
+  authentik = import ../services/authentik/_branding.nix {
     inherit pkgs;
     brand = authentikProfile;
   };

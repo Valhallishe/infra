@@ -1,11 +1,9 @@
+{ inputs, ... }:
 {
   imports = [
     ./lib/topology.nix
-    ./modules/branding
-    ./nodes/archserver.nix
-    ./nodes/halo.nix
-    ./hosts/halo
-    ./hosts/nixarchserver
+    ./modules/branding/_profile.nix
+    (inputs.import-tree.initFilter (path: builtins.baseNameOf path == "_inventory.nix") ./hosts)
   ];
 
   infra = {

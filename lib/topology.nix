@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  inputs,
   ...
 }:
 let
@@ -53,17 +54,7 @@ let
   };
   hostType = types.submodule (
     { name, ... }: {
-      imports = [
-        ../modules/services/authentik.nix
-        ../modules/services/comin.nix
-        ../modules/services/immich.nix
-        ../modules/services/inbuxa.nix
-        ../modules/services/inbuxaRelay.nix
-        ../modules/services/minecraft.nix
-        ../modules/services/nextcloud.nix
-        ../modules/services/peertube.nix
-        ../modules/services/vaultwarden.nix
-      ];
+      imports = [ (inputs.import-tree ../modules/services/_options) ];
       options = {
         node = mkOption {
           type = types.str;

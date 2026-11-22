@@ -8,6 +8,10 @@
 }:
 delib.module {
   name = "infra.krozzzis";
+  options = {
+    infra.krozzzis.enable = delib.boolOption false;
+  };
+
   nixos.ifEnabled =
     let
       starshipConfig = (pkgs.formats.toml { }).generate "krozzzis-starship.toml" (

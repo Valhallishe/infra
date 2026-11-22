@@ -27,7 +27,7 @@ HAProxy на Halo завершает TLS для `mail.valhallishe.net` и
 После обновления Compose примените его в рабочем каталоге через
 `docker compose up -d --no-build --pull never`. После изменения примонтированных
 файлов пересоздайте контейнеры `proxy` и `webmail`. Публичные URL и OIDC issuer
-берутся из маршрутов в `hosts/halo/default.nix`. Для проверки `sudo systemctl status inbuxa-relay` и
+берутся из маршрутов в `hosts/halo/_inventory.nix`. Для проверки `sudo systemctl status inbuxa-relay` и
 `sudo -u inbuxa-relay /opt/inbuxa-relay/bin/inbuxa-relay status` на Halo.
 
 DKIM-ключи сгенерированы сервером. При ручном DNS необходимо опубликовать оба

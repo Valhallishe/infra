@@ -6,12 +6,11 @@
 
 ## Структура конфигурации
 
-- [`infra.nix`](infra.nix) задаёт базовый домен, подсеть и репозиторий Comin.
-- [`hosts/nixarchserver/default.nix`](hosts/nixarchserver/default.nix) перечисляет сервисы Arch, их порты, хранилища, профили брендинга и файлы секретов.
-- [`hosts/halo/default.nix`](hosts/halo/default.nix) перечисляет службы Halo и именованные потоки, которые публикует шлюз. Например, `sso` ведёт на `nixarchserver.authentik.http`. Адрес и порт назначения вычисляются по конфигурации Arch.
-- [`modules/services/`](modules/services/) содержит параметры, Compose, юниты и скрипты сервисов.
-- [`modules/branding/`](modules/branding/) задаёт название, логотипы и палитры бренда. Привязка к Stylix тоже находится здесь.
-- `nodes/` задаёт узлы туннеля. Адреса вычисляются из подсети и `hostId`.
+- [`flake.nix`](flake.nix) передаёт деревья `hosts/` и `modules/` в Denix через `import-tree`. Для каждого NixOS-хоста `default.nix` содержит один `delib.host` и загружает локальные модули из `_nixos/`. Там лежат разметка Disko, параметры оборудования и сеть провайдера.
+- [`infra.nix`](infra.nix) задаёт домен, подсеть и репозиторий Comin. Этот модуль загружает все `_inventory.nix` из дерева хостов. Один и тот же инвентарь доступен NixOS и сборкам для Arch.
+- [`hosts/halo/_inventory.nix`](hosts/halo/_inventory.nix) задаёт адрес узла, соседа AWG, службы и публичные маршруты Halo.
+- [`hosts/nixarchserver/_inventory.nix`](hosts/nixarchserver/_inventory.nix) задаёт узел Archserver, соседа AWG и параметры сервисов. [`_build.nix`](hosts/nixarchserver/_build.nix) собирает юниты systemd и скрипт активации для Arch.
+- В [`modules/`](modules/) настройки профиля объявляются рядом с реализацией `delib.module`. Обычный обход `import-tree` пропускает пути с префиксом `_`. Например, схемы параметров сервисов из `modules/services/_options/` загружаются отдельно как подмодули инвентаря, а рецепты сборки вызываются явно.
 
 При смене домена обновите внешние записи DNS и параметры приложений, которые хранятся
 вне репозитория. Например, у PeerTube публичное имя является частью адресов ActivityPub.
@@ -19,18 +18,16 @@
 
 ## Halo
 
-`nixosConfigurations.halo` описывает сервер `halo`: KVM, BIOS/GRUB, один диск `/dev/vda`, Btrfs с `compress=zstd` для корня, отдельный ext4 `/boot`, swap-файл 2 ГиБ и статическую сеть провайдера. Разметка находится в `hosts/halo/disko.nix`. При установке этот диск полностью перезаписывается.
+`nixosConfigurations.halo` описывает сервер `halo`: KVM, BIOS/GRUB, один диск `/dev/vda`, Btrfs с `compress=zstd` для корня, отдельный ext4 `/boot`, swap-файл 2 ГиБ и статическую сеть провайдера. Разметка находится в `hosts/halo/_nixos/disko.nix`. При установке этот диск полностью перезаписывается.
 
 Маршруты Halo ссылаются на поток сервиса по имени хоста, сервиса и потока.
 Шлюз завершает TLS для HTTP-потоков и проксирует их в туннель. Для TCP и UDP порт по умолчанию берётся из указанного потока.
 NixOS ACME автоматически получает сертификаты; DNS-записи должны указывать на сервер,
 а порты 80 и 443 должны быть доступны извне. DNS этим репозиторием не управляется.
 
-На `halo` и `archserver` отдельный туннель AmneziaWG связывает узлы без изменения маршрута интернет-трафика. NixOS-модуль Halo и юнит `nixarchserver-awg.service` используют общую топологию. Приватные ключи зашифрованы agenix отдельно для соответствующего хоста и администратора. Comin применяет изменения через [nixarchserver](hosts/nixarchserver/README.md).
-
-Для системных сервисов зарезервирована сеть `10.1.0.0/16`. В туннеле `halo` использует `10.1.0.1`, а `archserver` — `10.1.0.2`. Маршруты создаются только к адресам настроенных узлов, а не ко всей зарезервированной сети.
-
-`net.valhallishe.net` указывает на публичный адрес узла VPN. HAProxy на `halo` предоставляет `sso.valhallishe.net` по HTTPS и проксирует запросы к Authentik на `archserver` через туннель. DNS-записи обоих имён управляются у DNS-провайдера; при смене адреса сервера их необходимо обновить. Публично разрешены TCP 22, 80, 443, 25565 и UDP 51825, 25565 (AmneziaWG).
+[Туннель AmneziaWG](#общая-сеть-amneziawg) соединяет Halo и Archserver.
+Публичные имена сервисов и `net.valhallishe.net` указывают на Halo. HAProxy принимает
+HTTPS для `sso.valhallishe.net` и передаёт запросы к Authentik через туннель.
 
 HAProxy также предоставляет `pass.valhallishe.net` по HTTPS, проксируя запросы к Vaultwarden на `archserver` через тот же туннель. DNS-запись этого имени управляется у DNS-провайдера.
 
@@ -41,8 +38,8 @@ Immich доступен через `photos.valhallishe.net`: Halo заверша
 ## Подготовка VPS
 
 1. Убедитесь, что VPS загружается в UEFI, поддерживает DHCP и доступен по SSH из rescue-системы с правами root. При статической сети добавьте её конфигурацию в хост **до установки**. При BIOS загрузчик и разметку нужно изменить. Systemd-boot устанавливается в EFI-раздел, смонтированный в `/boot`, без изменения EFI NVRAM.
-2. Через `lsblk -o NAME,SIZE,MODEL,TYPE` и `ls -l /dev/disk/by-id/` в rescue-системе определите целый диск. Укажите его стабильный путь в `hosts/vps/disko.nix`. `CHANGE-ME` намеренно не является реальным диском. Disko полностью сотрёт выбранный диск, включая все разделы и данные.
-3. Создайте свой профиль администратора в `modules/`, подключите его во flake и включите для хоста. Образец `modules/krozzzis.nix` по умолчанию отключён; замените имя и публичный ключ перед включением. Без администратора с SSH-ключом после установки вход будет невозможен. Проверьте, что соответствующий приватный ключ доступен на машине управления. Парольный SSH и keyboard-interactive выключены, вход root по SSH запрещён. Пример профиля добавляет администратора в `wheel` и разрешает sudo без пароля.
+2. Через `lsblk -o NAME,SIZE,MODEL,TYPE` и `ls -l /dev/disk/by-id/` в rescue-системе определите целый диск. Укажите его стабильный путь в `hosts/vps/_nixos/disko.nix`. `CHANGE-ME` намеренно не является реальным диском. Disko полностью сотрёт выбранный диск, включая все разделы и данные.
+3. Создайте свой профиль администратора в `modules/` и включите его через `myconfig` в `delib.host`. Образец `modules/krozzzis.nix` по умолчанию отключён; замените имя и публичный ключ перед включением. Без администратора с SSH-ключом после установки вход будет невозможен. Проверьте, что соответствующий приватный ключ доступен на машине управления. Парольный SSH и keyboard-interactive выключены, вход root по SSH запрещён. Пример профиля добавляет администратора в `wheel` и разрешает sudo без пароля.
 4. Убедитесь, что есть доступ к консоли провайдера на случай ошибки сети или SSH. Если VPS не использует QEMU, отключите `services.qemuGuest.enable`.
 
 ## Установка
@@ -108,54 +105,35 @@ Git. Сохраните соответствующие приватные SSH-к
 
 ## Структура деклараций и реализации
 
-- `infra.nix` — базовый домен инфраструктуры, единственное место его настройки.
-- `nodes/` — каталог узлов: hostId определяет адрес внутри общей подсети.
-- `modules/services/` — именованные потоки `inbound` и `outbound` сервисов.
-- `lib/declarations/` и `lib/nixos/` — декларации Denix и типы настроек.
-- `modules/` — связующие модули; `modules/security/` — firewall, SSH,
-  Fail2ban и CrowdSec.
-- `lib/haproxy.nix` — построение конфигурации HAProxy и проверки маршрутов.
-- `modules/haproxy.nix` — связь маршрутов gateway с NixOS HAProxy, ACME и firewall.
-- `modules/awg.nix` — общий модуль подключения узла к AWG.
-- `hosts/halo/` и `hosts/vps/` — состав хостов и параметры оборудования.
-
-Деревья типов и узлов подключаются через `import-tree`. Ссылки на файлы
-репозитория задаются от `inputs.self`.
-
-Сервис объявляет потоки в `modules/services/`:
-
-```nix
-nixos.always.infra.services.example = {
-  inbound.web = { };
-  outbound.web = { node = "archserver"; port = 8080; };
-};
-```
-
-Gateway включает `myconfig.infra.web.enable` и публикует конкретную пару потоков.
-Пример записи в `nixos.infra.web.routes` из `hosts/halo/gateway.nix`:
+Сервис объявляет именованные потоки в `infra.hosts.<host>.services`.
+В [инвентаре Archserver](hosts/nixarchserver/_inventory.nix) запись
+`services.authentik.flows.http.port = 5680;` задаёт внутренний порт.
+В [инвентаре Halo](hosts/halo/_inventory.nix) маршрут в `gateway.routes`
+ссылается на этот поток:
 
 ```nix
 {
-  service = "example";
-  inbound = "web";
-  outbound = "web";
-  domain = "example.${config.infra.domain}";
+  domain = "sso.${config.infra.domain}";
+  to = {
+    host = "nixarchserver";
+    service = "authentik";
+    flow = "http";
+  };
 }
 ```
 
-По умолчанию вход принимает HTTPS на 443 с завершением TLS, выход использует HTTP.
-Для TLS до backend задайте `outbound.<имя>.protocol = "https"`.
-TCP занимает отдельный порт и поддерживает `tls = "none"`, `"passthrough"`
-и `"terminate"`. Для отправки PROXY protocol v2 задайте
-`outbound.<имя>.proxyProtocol = "v2"`. UDP перенаправляется через nftables
-на AWG peer. TCP и UDP без завершения TLS используют домен как DNS-имя gateway.
+[Модули шлюза](modules/gateway/) вычисляют адрес назначения из overlay-адреса
+хоста и порта потока. По умолчанию HTTP-поток публикуется через HTTPS на
+443 с завершением TLS на Halo. Для HTTPS до backend задайте
+`flows.<имя>.protocol = "https"`. TCP поддерживает `listen.tls = "none"`,
+`"passthrough"` и `"terminate"`. UDP перенаправляется через nftables на
+соседа AWG. Для TCP и UDP без завершения TLS домен используется как DNS-имя шлюза.
 
-`inbound.<имя>.acceptProxyProtocol = true` требует PROXY-заголовок от входного соединения;
-включайте его только на входах от доверенного upstream proxy.
-`outbound.<имя>.proxyProtocol` поддерживает `none`, `v1`, `v2`, `v2-ssl`;
-последний вариант передаёт сведения о завершённом TLS. Backend должен явно
-поддерживать выбранный PROXY protocol: обычный sshd или HTTP-сервис такой
-заголовок не принимает. По умолчанию PROXY protocol выключен в обе стороны.
+`listen.acceptProxyProtocol = true` требует PROXY-заголовок от входного соединения.
+Включайте его только на входах от доверенного upstream proxy.
+`flows.<имя>.proxyProtocol` поддерживает `none`, `v1`, `v2` и `v2-ssl`.
+Последний вариант передаёт сведения о завершённом TLS. Backend должен явно
+поддерживать выбранный PROXY protocol. По умолчанию он выключен в обе стороны.
 
 Firewall открывает TCP-порты маршрутов и 80/443. HAProxy не публикует HTTP/3.
 HTTP-маршруты одного порта должны иметь совместимые TLS/PROXY-настройки
@@ -172,11 +150,6 @@ ACME listener `127.0.0.1:8008`. Базовый домен также включ�
 не вызывается. Все домены сертификата должны указывать на этот proxy,
 порт 80 должен быть доступен извне. Email ACME по умолчанию —
 `admin@${infra.domain}`; переопределяется через `security.acme.defaults.email`.
-
-Ключи доступа хранятся в agenix; открытыми остаются получатели шифрования
-в `secrets/secrets.nix`. Шаблон Arch требует подстановки `@HALO_PUBLIC_KEY@`
-из `halo-awg-public.age` и приватного ключа из `archserver-awg.age`.
-
 
 ## Nextcloud и Immich
 
@@ -211,45 +184,53 @@ CSS в webmail, Nextcloud получает основной цвет и цвет
 
 ## Общая сеть AmneziaWG
 
-`infra.nix` задаёт `infra.network.subnet` (сейчас `10.1.0.0/16`).
-IP узла вычисляется как адрес сети плюс `hostId`: Halo — 1, Archserver — 2.
-Backend-адреса сервисов автоматически используют вычисленный IP узла.
-Поддерживается IPv4 CIDR с префиксом 0..30; адрес сети, broadcast и повторяющиеся
-адреса узлов запрещены. По умолчанию интерфейс — `infra0`, порт — 51825;
-общие параметры маскировки заданы в `infra.network.obfuscation`.
+[Halo](hosts/halo/_inventory.nix) и [Archserver](hosts/nixarchserver/_inventory.nix)
+связывает интерфейс `infra0`. В инвентаре каждого хоста `node` указывает
+на локальный узел, а `services.awg.peer` — на соседа.
 
-Для добавления NixOS-сервера:
+| Узел | `hostId` | IP на `infra0` | Куда отправляет AWG-пакеты |
+| --- | --- | --- | --- |
+| Halo | 1 | `10.1.0.1/32` | На адрес и порт Archserver, полученные из его первого аутентифицированного пакета |
+| Archserver (хост `nixarchserver`) | 2 | `10.1.0.2/32` | `net.valhallishe.net:51825/udp` с keepalive каждые 25 секунд при отсутствии трафика |
 
-1. Добавьте `nodes/newserver.nix` с `infra.nodes.newserver.hostId = 3`.
-2. Зашифруйте ключи в `secrets/newserver-awg.age` и
-   `secrets/newserver-awg-public.age`. Приватный ключ должен расшифровываться
-   новым сервером, публичный — всеми его соседями. Добавьте получателей
-   в `secrets/secrets.nix`; существующие публичные ключи соседей также нужно
-   перешифровать для нового сервера.
-3. В конфигурации хоста включите `nixos.infra.awg.enable = true`.
-   Имя узла по умолчанию берётся из `networking.hostName`; его можно задать
-   через `infra.awg.node`.
+`net.valhallishe.net` должен указывать на публичный IP Halo. Archserver
+инициирует соединение с Halo. После рукопожатия Halo может отправлять
+трафик Archserver через тот же туннель. Префикс
+`10.1.0.0/16` в [`infra.nix`](infra.nix) служит для расчёта IP по формуле «адрес сети + `hostId`». У каждого соседа свой маршрут `/32` и такой же `AllowedIPs`.
+Обычный интернет-трафик идёт через маршрут провайдера.
 
-Соседи по умолчанию — все остальные узлы; список можно ограничить через
-`infra.awg.peers = [ "halo" ]`. Для доступного извне узла задайте
-`infra.nodes.<name>.awg.endpoint = "hostname:port"`.
-Соседи с endpoint получают keepalive 25 секунд. Для узлов за NAT должен
-существовать доступный сосед с endpoint; взаимная доступность всех пар
-не возникает автоматически. Маршруты создаются только к IP соседей (/32).
+```text
+Браузер → sso.valhallishe.net:443 → HAProxy на Halo
+        → HTTP через infra0 → Authentik на 10.1.0.2:5680
+```
 
-Halo использует общий модуль; его `network.nix` содержит только настройки
-провайдера и включение AWG. Ключи и команды настройки туннеля вынесены
-в `modules/awg.nix`. Изменение зашифрованного ключа вызывает перезапуск
-интерфейса при применении конфигурации.
+HAProxy завершает TLS и открывает отдельное соединение до backend.
+Для Minecraft UDP 25565 Halo выполняет DNAT на `10.1.0.2:25565` и SNAT
+на `10.1.0.1`, чтобы ответы Archserver шли обратно через туннель.
 
-Comin управляет Authentik, PeerTube и AWG на Archserver через конфигурацию
-[nixarchserver](hosts/nixarchserver/README.md). Конфигурация туннеля Arch
-генерируется из тех же `infra.network` и `infra.nodes`, что и на Halo.
-Смена подсети меняет адреса сервисов и туннеля.
+Модуль [AWG для NixOS](modules/awg.nix) читает пару `node` / `services.awg.peer`
+из инвентаря Halo и поднимает `wireguard-infra0.service`. На Archserver
+юнит `nixarchserver-awg.service` запускает `awg-quick` с конфигурацией из того
+же инвентаря. В обоих случаях приватный ключ узла и публичный ключ соседа
+берутся из файлов `.age` при запуске. Общие параметры интерфейса и
+маскировки задаются в `infra.network`.
+
+Для проверки на Halo выполните `sudo systemctl status wireguard-infra0.service`
+и `ip route get 10.1.0.2`, на Archserver — `sudo systemctl status nixarchserver-awg.service`
+и `ip route get 10.1.0.1`. Маршрут к соседу должен идти через `infra0`.
+Команда `sudo awg show infra0` на обоих узлах показывает время последнего
+рукопожатия и счётчики трафика.
+
+Для добавления NixOS-узла задайте его `hostId`, локальный `node` и соседа
+в `hosts/<host>/_inventory.nix`, добавьте ключи в `secrets/` и получателей
+в `secrets/secrets.nix`. Приватный ключ должен расшифровываться на самом
+узле, публичный — на его соседях. Добавьте новый узел в список соседей
+противоположной стороны. Если у NixOS-узла несколько соседей, задайте их
+списком в `nixos.infra.awg.peers` его `delib.host`.
 
 ## Minecraft
 
-Halo публикует Java-сервер Valhallishe SMP по маршруту из `hosts/halo/default.nix`:
+Halo публикует Java-сервер Valhallishe SMP по маршруту из `hosts/halo/_inventory.nix`:
 `mc.play.${infra.domain}:25565` → Halo HAProxy → AWG → Archserver Velocity
 на TCP 25565. Velocity направляет игроков в существующий `survival`.
 HAProxy отправляет PROXY protocol v2 для сохранения адреса игрока;
@@ -258,7 +239,7 @@ HAProxy отправляет PROXY protocol v2 для сохранения ад�
 дополнительная SRV-запись не требуется при стандартном порте 25565.
 Второй маршрут этого же сервиса публикует Simple Voice Chat Proxy на UDP 25565
 (в текущем конфиге Voice Chat `port=-1`, поэтому используется порт Velocity).
-UDP обрабатывает общий `modules/udp.nix` через схему `lib/udp.nix`: nftables
+UDP обрабатывает общий `modules/gateway/udp.nix` через схему `lib/udp.nix`: nftables
 выполняет DNAT на узел сервиса и SNAT на AWG-адрес входного узла.
 Это обеспечивает обратный путь через туннель без маршрута по умолчанию на Halo.
 PROXY protocol применяется только к TCP. Bedrock и UDP query не настраиваются.

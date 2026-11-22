@@ -69,5 +69,5 @@ PeerTube использует группы Authentik `PeerTube Access` для в
 этим значением. Локальная учётная запись администратора сохраняет доступ
 для обслуживания. Настройки OIDC применяются при запуске юнита, секрет
 клиента берётся из `secrets/nixarchserver-peertube.age`. Публичные URL PeerTube и
-Authentik вычисляются из маршрутов в `hosts/halo/default.nix` и используются в Compose,
+Authentik вычисляются из маршрутов в `hosts/halo/_inventory.nix` и используются в Compose,
 проверке API и настройке OIDC.

@@ -14,15 +14,15 @@ let
     flow = "http";
   };
   public = service: endpoints.public host.publicGateway (target service);
-  authentik = import ../../modules/services/authentik/arch.nix {
+  authentik = import ../../modules/services/authentik/_arch.nix {
     inherit pkgs decrypt;
     instance = host.services.authentik;
-    branding = import ../../modules/services/authentik/branding.nix {
+    branding = import ../../modules/services/authentik/_branding.nix {
       inherit pkgs;
       brand = topology.branding.${host.services.authentik.branding};
     };
   };
-  peertube = import ../../modules/services/peertube/arch.nix {
+  peertube = import ../../modules/services/peertube/_arch.nix {
     inherit pkgs decrypt;
     inherit (host.services.peertube) secretFile adminEmail storage;
     inherit (host.services.peertube) mount;
@@ -33,13 +33,13 @@ let
     proxyAddress = topology.nodes.${topology.hosts.${host.publicGateway}.node}.ip;
   };
   inherit (topology.network) interface;
-  awg = import ../../modules/awg/arch.nix {
+  awg = import ../../modules/awg/_arch.nix {
     inherit pkgs decrypt;
     inherit (topology) network;
     node = topology.nodes.${host.node};
     peer = topology.nodes.${host.services.awg.peer};
   };
-  cominUnit = import ../../modules/services/comin/arch.nix {
+  cominUnit = import ../../modules/services/comin/_arch.nix {
     inherit pkgs comin;
     inherit (topology) repository;
     inherit (host.services.comin) branch;

@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  options.services.peertube = import ../../lib/service-option.nix {
+  options.services.peertube = import ../../../lib/service-option.nix {
     inherit lib;
     options = {
       branding = lib.mkOption { type = lib.types.str; };

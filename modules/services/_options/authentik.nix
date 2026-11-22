@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  options.services.authentik = import ../../lib/service-option.nix {
+  options.services.authentik = import ../../../lib/service-option.nix {
     inherit lib;
     options = {
       branding = lib.mkOption { type = lib.types.str; };

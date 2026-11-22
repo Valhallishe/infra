@@ -1,13 +1,10 @@
-{
-  delib,
-  inputs,
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ delib, ... }:
 delib.module {
   name = "infra.base";
+  options = {
+    infra.base.enable = delib.boolOption true;
+  };
+
   nixos.ifEnabled = {
     nix.settings = {
       experimental-features = [
