@@ -60,9 +60,7 @@ let
     fi
     logo=$(base64 -w0 ${../../themes/authentik/assets/valhallishe-symbol.svg})
     export PEERTUBE_BRAND_CSS="my-header .instance-name { font-weight: 700; }
-    my-header .instance-name::before { content: ''; display: inline-block;
-      width: 1.4em; height: 1.4em; vertical-align: middle; margin-inline-end: .45em;
-      background: url(data:image/svg+xml;base64,$logo) center / contain no-repeat; }"
+    my-header img.logo { content: url(data:image/svg+xml;base64,$logo); object-fit: contain; }"
     exec docker compose -p nixarchserver-peertube --env-file /run/nixarchserver-peertube/credentials -f ${compose} "$@"
   '';
 in
