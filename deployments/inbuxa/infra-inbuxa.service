@@ -1,7 +1,8 @@
 [Unit]
 Description=Inbuxa containers
-Requires=docker.service awg-quick@infra0.service
-After=docker.service awg-quick@infra0.service
+Requires=docker.service
+Wants=nixarchserver-awg.service
+After=docker.service nixarchserver-awg.service
 
 [Service]
 Type=oneshot
