@@ -19,7 +19,12 @@ let
   webmail = public "inbuxa" "webmail";
   admin = public "inbuxa" "admin";
   sso = public "authentik" "http";
-  unit = pkgs.replaceVars ./infra-inbuxa.service.in { inherit (service) dataDir; };
+  decrypt = pkgs.writeShellScript "inbuxa-decrypt-secrets" ''
+    set -eu
+    umask 077
+    ${pkgs.age}/bin/age -d -i /etc/ssh/ssh_host_ed25519_key ${../../../secrets/nixarchserver-inbuxa.age} > /run/infra-inbuxa/webmail-secrets.env
+  '';
+  unit = pkgs.replaceVars ./infra-inbuxa.service.in { inherit (service) dataDir; inherit decrypt; };
   # Compose inputs are rendered together with the gateway routes.
   compose = pkgs.replaceVars ./compose.yaml.in {
     appName = builtins.toJSON "${brand.name} Mail";

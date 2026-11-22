@@ -32,4 +32,17 @@
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID3JM/W76cJjAW/1QflJsfrFrL9UuVR5UGmnyhjbIycY"
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKQGKkZNU6yvYP/63Z7xiD7434BSHTKt4rZU57OksIZr"
   ];
+  "nixarchserver-inbuxa.age".publicKeys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID3JM/W76cJjAW/1QflJsfrFrL9UuVR5UGmnyhjbIycY"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKQGKkZNU6yvYP/63Z7xiD7434BSHTKt4rZU57OksIZr"
+  ];
+  "inbuxa-bootstrap-archive.age".publicKeys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID3JM/W76cJjAW/1QflJsfrFrL9UuVR5UGmnyhjbIycY"
+  ];
+  "inbuxa-local-archive.age".publicKeys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID3JM/W76cJjAW/1QflJsfrFrL9UuVR5UGmnyhjbIycY"
+  ];
+  "inbuxa-previous-archive.age".publicKeys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID3JM/W76cJjAW/1QflJsfrFrL9UuVR5UGmnyhjbIycY"
+  ];
 }

@@ -72,6 +72,17 @@
           };
         };
       packages.x86_64-linux.nixarchserver = nixarchserver;
+      packages.x86_64-linux.bootstrap-secrets = pkgs.writeShellApplication {
+        name = "bootstrap-secrets";
+        runtimeInputs = with pkgs; [ age openssh python3 wireguard-tools ];
+        text = ''
+          exec ${pkgs.python3}/bin/python3 ${./scripts/bootstrap-secrets.py} "$@"
+        '';
+      };
+      apps.x86_64-linux.bootstrap-secrets = {
+        type = "app";
+        program = "${self.packages.x86_64-linux.bootstrap-secrets}/bin/bootstrap-secrets";
+      };
       packages.x86_64-linux.inbuxa-config = import ./modules/services/inbuxa/package.nix {
         inherit pkgs endpoints topology;
         hostname = "nixarchserver";

@@ -138,6 +138,7 @@ let
               proxyAddress
             ];
             PEERTUBE_SECRET = "\${PEERTUBE_SECRET:?}";
+            PT_INITIAL_ROOT_PASSWORD = "\${PEERTUBE_ADMIN_PASSWORD:?}";
             PEERTUBE_SIGNUP_ENABLED = "false";
             PEERTUBE_VIDEO_STUDIO_ENABLED = "true";
             PEERTUBE_VIDEO_STUDIO_REMOTE_RUNNERS_ENABLED = "false";

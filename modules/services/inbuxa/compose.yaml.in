@@ -18,7 +18,7 @@ services:
     image: registry.coffeylabs.org/inbuxa/inbuxa-webmail@sha256:70d240165bb2da2060e1c6c2b17233f3984a4f148cab77e7a0207f2f70adfef4
     restart: unless-stopped
     env_file:
-      - webmail-secrets.env
+      - /run/infra-inbuxa/webmail-secrets.env
     environment:
       MAIL_SERVER_URL: http://server:8080
       PUBLIC_URL: @webmailUrl@

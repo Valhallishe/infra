@@ -3,9 +3,12 @@
 Сервер и админка развёрнуты на Archserver через `/srv/docker/inbuxa/compose.yaml`.
 Сервер и релей зафиксированы на 27.1-rc.5. Служба `infra-inbuxa.service`
 запускает compose после Docker и туннеля, чтобы адрес 10.1.0.2 уже существовал. Данные и настройки сервера хранятся
-в `/srv/docker/inbuxa/{data,config}`; их необходимо включить в резервное копирование. Результат
-первичной настройки с учётными данными администратора хранится на Archserver в
-`/srv/docker/inbuxa/bootstrap-result.json` (права 0600). Временный контейнер
+в `/srv/docker/inbuxa/{data,config}`; их необходимо включить в резервное копирование.
+Секреты веб-почты зашифрованы в `secrets/nixarchserver-inbuxa.age` и
+расшифровываются SSH-ключом хоста в `/run/infra-inbuxa` при запуске юнита.
+Учётные данные первоначальной настройки сохранены отдельно в зашифрованном
+`secrets/inbuxa-bootstrap-archive.age` для администратора. Учётные записи
+и данные сервера продолжают храниться в базе Inbuxa. Временный контейнер
 `inbuxa-admin-setup` остановлен.
 
 HAProxy на Halo завершает TLS для `mail.valhallishe.net` и
