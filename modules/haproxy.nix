@@ -1,17 +1,21 @@
 {
   delib,
-  inputs,
   config,
   lib,
   ...
 }:
 let
   infra = config.infra;
+  endpoints = import ../lib/service-endpoints.nix { inherit lib infra; };
   routes = lib.filter (route: route.protocol != "udp") (
-    import (inputs.self + "/lib/gateway-routes.nix") infra
+    import ../lib/gateway-routes.nix {
+      inherit endpoints;
+      routes = infra.hosts.${config.networking.hostName}.gateway.routes or [ ];
+    }
   );
-  proxy = import (inputs.self + "/lib/haproxy.nix") {
+  proxy = import ../lib/haproxy.nix {
     inherit lib routes;
+    brand = infra.branding.${infra.hosts.${config.networking.hostName}.branding};
     domain = infra.domain;
     certificate = "/var/lib/acme/${infra.domain}/full.pem";
   };

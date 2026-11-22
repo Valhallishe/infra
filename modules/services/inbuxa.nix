@@ -1,16 +1,10 @@
-{ delib, ... }:
-delib.module {
-  name = "infra.services.inbuxa";
-  nixos.always.infra.services.inbuxa = {
-    inbound.webmail = { };
-    outbound.webmail = {
-      node = "archserver";
-      port = 18084;
-    };
-    inbound.admin = { };
-    outbound.admin = {
-      node = "archserver";
-      port = 18081;
+{ lib, ... }:
+{
+  options.services.inbuxa = import ../../lib/service-option.nix {
+    inherit lib;
+    options = {
+      branding = lib.mkOption { type = lib.types.str; };
+      dataDir = lib.mkOption { type = lib.types.str; };
     };
   };
 }

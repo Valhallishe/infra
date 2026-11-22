@@ -4,16 +4,29 @@
 
 Необязательный профиль `krozzzis` включает fish, vim и Starship. Настройки prompt скопированы из `osa-user` в `lib/starship.nix`; изменения исходного конфига нужно переносить сюда отдельно. Для значков нужен Nerd Font в терминале клиента.
 
+## Структура конфигурации
+
+- [`infra.nix`](infra.nix) задаёт базовый домен, подсеть и репозиторий Comin.
+- [`hosts/nixarchserver/default.nix`](hosts/nixarchserver/default.nix) перечисляет сервисы Arch, их порты, хранилища, профили брендинга и файлы секретов.
+- [`hosts/halo/default.nix`](hosts/halo/default.nix) перечисляет службы Halo и именованные потоки, которые публикует шлюз. Например, `sso` ведёт на `nixarchserver.authentik.http`. Адрес и порт назначения вычисляются по конфигурации Arch.
+- [`modules/services/`](modules/services/) содержит параметры, Compose, юниты и скрипты сервисов.
+- [`modules/branding/`](modules/branding/) задаёт название, логотипы и палитры бренда. Привязка к Stylix тоже находится здесь.
+- `nodes/` задаёт узлы туннеля. Адреса вычисляются из подсети и `hostId`.
+
+При смене домена обновите внешние записи DNS и параметры приложений, которые хранятся
+вне репозитория. Например, у PeerTube публичное имя является частью адресов ActivityPub.
+
+
 ## Halo
 
 `nixosConfigurations.halo` описывает сервер `halo`: KVM, BIOS/GRUB, один диск `/dev/vda`, Btrfs с `compress=zstd` для корня, отдельный ext4 `/boot`, swap-файл 2 ГиБ и статическую сеть провайдера. Разметка находится в `hosts/halo/disko.nix`. При установке этот диск полностью перезаписывается.
 
-Сервисы объявляются в `modules/services/`: каждый задаёт список маршрутов с доменом, протоколом, портами и узлами. Общая схема HAProxy автоматически публикует сервисы под
-доменами из маршрутов. Базовый домен задан в `infra.nix`, узлы — в `nodes/`.
+Маршруты Halo ссылаются на поток сервиса по имени хоста, сервиса и потока.
+Шлюз завершает TLS для HTTP-потоков и проксирует их в туннель. Для TCP и UDP порт по умолчанию берётся из указанного потока.
 NixOS ACME автоматически получает сертификаты; DNS-записи должны указывать на сервер,
 а порты 80 и 443 должны быть доступны извне. DNS этим репозиторием не управляется.
 
-На `halo` и `archserver` настроен отдельный туннель AmneziaWG для связи узлов. Он не меняет маршрут интернет-трафика и не предоставляет выход в интернет через сервер. Настройка `halo` входит в NixOS-конфигурацию; шаблон для Arch Linux находится в `peers/archserver/`. Приватные ключи зашифрованы agenix отдельно для соответствующего хоста и администратора. На Arch конфигурацию из шаблона собирает юнит `nixarchserver-awg.service`. Comin применяет изменения через [nixarchserver](hosts/nixarchserver/README.md). Для дополнительных узлов нужны собственные ключи, адреса и записи peer с согласованными параметрами маскировки.
+На `halo` и `archserver` отдельный туннель AmneziaWG связывает узлы без изменения маршрута интернет-трафика. NixOS-модуль Halo и юнит `nixarchserver-awg.service` используют общую топологию. Приватные ключи зашифрованы agenix отдельно для соответствующего хоста и администратора. Comin применяет изменения через [nixarchserver](hosts/nixarchserver/README.md).
 
 Для системных сервисов зарезервирована сеть `10.1.0.0/16`. В туннеле `halo` использует `10.1.0.1`, а `archserver` — `10.1.0.2`. Маршруты создаются только к адресам настроенных узлов, а не ко всей зарезервированной сети.
 
@@ -37,8 +50,8 @@ Immich доступен через `photos.valhallishe.net`: Halo заверша
 На машине управления с Nix и доступом по SSH к rescue-системе:
 
 ```sh
-nix flake check path:. --no-build
-nix run github:nix-community/nixos-anywhere -- --flake path:.#vps root@IP_СЕРВЕРА
+nix flake check . --no-build
+nix run github:nix-community/nixos-anywhere -- --flake .#vps root@IP_СЕРВЕРА
 ```
 
 При необходимости передайте параметры подключения согласно [документации nixos-anywhere](https://github.com/nix-community/nixos-anywhere/blob/main/docs/quickstart.md). Установка стирает диск; проверьте путь и резервные копии перед запуском. После перезагрузки проверьте SSH, сеть, firewall и сервисы:
@@ -54,7 +67,7 @@ sudo nft list ruleset
 
 CrowdSec при первом запуске скачивает коллекцию SSH из Hub; для этого серверу нужен исходящий доступ в интернет. Он анализирует системный журнал и передаёт блокировки локальному firewall-bouncer. Fail2ban независимо использует свой SSH jail. Возможна блокировка собственного адреса: для восстановления используйте консоль провайдера. Внешние порты открываются явно при добавлении сервисов; SSH открыт модулем OpenSSH.
 
-Для последующих изменений используется обычный NixOS flake, например `nixos-rebuild switch --flake path:.#vps --target-host krozzzis@IP_СЕРВЕРА --use-remote-sudo`. Хост `halo` также автоматически развёртывается через Comin.
+Для последующих изменений используется обычный NixOS flake, например `nixos-rebuild switch --flake .#vps --target-host krozzzis@IP_СЕРВЕРА --use-remote-sudo`. Хост `halo` также автоматически развёртывается через Comin.
 
 Профиль включает zram (25% памяти), ограничение журналов, автоматический сбор мусора Nix старше 14 дней и хранение до пяти загрузочных поколений. Сбор мусора удаляет старые поколения и уменьшает доступный горизонт отката; резервные копии он не заменяет. Пример VPS использует ext4 без шифрования и swap-раздела; при необходимости настройте резервное копирование и шифрование под инфраструктуру провайдера. Обновление `flake.lock` и развёртывание обновлений выполняются отдельно.
 
@@ -150,18 +163,18 @@ Archserver: Nextcloud AIO на 6084, Immich на 2283.
 
 ## Темы сервисов
 
-Палитра Stylix задаётся в `hosts/halo/stylix.nix`. Соберите артефакты и примените
-их к контейнерам на Archserver:
+Halo подключает Stylix с профилем из `modules/branding/`. Authentik применяет
+профиль из своей декларации при запуске. Темы Inbuxa и Nextcloud можно
+применить отдельно на Archserver:
 
 ```sh
-export SERVICE_THEMES=$(nix build "path:$PWD#service-themes" --no-link --print-out-paths)
-./themes/authentik/deploy.sh archserver
-./deployments/inbuxa/deploy-theme.sh archserver
+export SERVICE_THEMES=$(nix build .#service-themes --no-link --print-out-paths)
+./modules/services/inbuxa/deploy-theme.sh archserver
 ssh archserver 'bash -s' < "$SERVICE_THEMES/nextcloud.sh"
 ```
 
-Для inbuxa сначала обновите `compose.yaml` и `nginx.conf` в `/srv/docker/inbuxa`
-и пересоздайте контейнер `proxy` командой `docker compose up -d --no-deps --force-recreate proxy`.
+Файлы Compose и nginx для Inbuxa собираются через `nix build .#inbuxa-config`.
+Порядок обновления описан в [документации Inbuxa](modules/services/inbuxa/README.md).
 Authentik получает CSS вместе с текущими логотипом и фоном, inbuxa загружает
 CSS в webmail, Nextcloud получает основной цвет и цвет фона через OCC.
 
@@ -198,14 +211,14 @@ Halo использует общий модуль; его `network.nix` соде
 в `modules/awg.nix`. Изменение зашифрованного ключа вызывает перезапуск
 интерфейса при применении конфигурации.
 
-Comin управляет Authentik и AWG на Archserver через конфигурацию
-[nixarchserver](hosts/nixarchserver/README.md). При изменении подсети, домена,
-порта или маскировки обновите `peers/archserver/infra0.conf.template` в
-том же коммите, что и настройки Halo. Смена подсети меняет адреса сервисов и туннеля.
+Comin управляет Authentik, PeerTube и AWG на Archserver через конфигурацию
+[nixarchserver](hosts/nixarchserver/README.md). Конфигурация туннеля Arch
+генерируется из тех же `infra.network` и `infra.nodes`, что и на Halo.
+Смена подсети меняет адреса сервисов и туннеля.
 
 ## Minecraft
 
-`hosts/halo/gateway.nix` публикует Java-сервер Valhallishe SMP:
+Halo публикует Java-сервер Valhallishe SMP по маршруту из `hosts/halo/default.nix`:
 `mc.play.${infra.domain}:25565` → Halo HAProxy → AWG → Archserver Velocity
 на TCP 25565. Velocity направляет игроков в существующий `survival`.
 HAProxy отправляет PROXY protocol v2 для сохранения адреса игрока;

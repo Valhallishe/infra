@@ -12,21 +12,21 @@ from authentik.providers.oauth2.models import OAuth2Provider, RedirectURI, Scope
 with transaction.atomic():
     if configure:
         provider, _ = OAuth2Provider.objects.update_or_create(
-            name="Valhallishe Videos",
+            client_id="peertube",
             defaults=dict(
-                client_id="peertube",
+                name=settings["displayName"],
                 client_secret=client_secret,
                 sub_mode=SubModes.HASHED_USER_ID,
                 authorization_flow=Flow.objects.get(slug="default-provider-authorization-implicit-consent"),
                 invalidation_flow=Flow.objects.get(slug="default-provider-invalidation-flow"),
                 signing_key=CertificateKeyPair.objects.get(name="authentik Self-signed Certificate"),
-                redirect_uris=[RedirectURI("strict", "https://videos.valhallishe.net/plugins/auth-openid-connect/router/code-cb")],
+                redirect_uris=[RedirectURI("strict", settings["redirectUri"])],
             ),
         )
         provider.property_mappings.set(ScopeMapping.objects.filter(scope_name__in=["openid", "email", "profile"], managed__startswith="goauthentik.io/"))
         app, _ = Application.objects.update_or_create(
             slug="peertube",
-            defaults=dict(name="Valhallishe Videos", provider=provider, policy_engine_mode="all"),
+            defaults=dict(name=settings["displayName"], provider=provider, policy_engine_mode="all"),
         )
 
         access, _ = Group.objects.get_or_create(name=settings["accessGroup"])

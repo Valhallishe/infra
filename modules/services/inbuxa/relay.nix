@@ -1,5 +1,13 @@
-{ delib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
+  node = config.infra.nodes.${config.infra.awg.node};
+  relayConfig = config.infra.hosts.${config.networking.hostName}.services.inbuxaRelay or null;
+  port = relayConfig.linkPort;
   binary = pkgs.fetchurl {
     url = "https://git.coffeylabs.org/inbuxa/inbuxa-server/releases/download/v27.1-rc.5/inbuxa-relay-x86_64-linux-musl";
     sha256 = "1c169d75aac1da6c28b4563a2f2680ee1332e202b9ca35c506b33216c67cd71e";
@@ -8,24 +16,26 @@ let
     install -Dm755 ${binary} $out/bin/inbuxa-relay
   '';
 in
-delib.host {
-  name = "halo";
-  nixos = {
+{
+  config = lib.mkIf (relayConfig != null) {
     users.groups.inbuxa-relay = { };
     users.users.inbuxa-relay = {
       isSystemUser = true;
       group = "inbuxa-relay";
     };
     networking.firewall.allowedTCPPorts = [ 25 ];
-    networking.firewall.interfaces.infra0.allowedTCPPorts = [ 10443 ];
+    networking.firewall.interfaces.${config.infra.network.interface}.allowedTCPPorts = [ port ];
     systemd.services.inbuxa-relay = {
       description = "inbuxa Relay";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network-online.target" "wireguard-infra0.service" ];
+      after = [
+        "network-online.target"
+        "wireguard-${config.infra.network.interface}.service"
+      ];
       wants = [ "network-online.target" ];
       unitConfig.ConditionPathExists = "/var/lib/inbuxa-relay/identity.json";
       serviceConfig = {
-        ExecStart = "${relay}/bin/inbuxa-relay run --state /var/lib/inbuxa-relay --link-listen 10.1.0.1:10443";
+        ExecStart = "${relay}/bin/inbuxa-relay run --state /var/lib/inbuxa-relay --link-listen ${node.ip}:${toString port}";
         User = "inbuxa-relay";
         Group = "inbuxa-relay";
         StateDirectory = "inbuxa-relay";

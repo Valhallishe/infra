@@ -25,36 +25,63 @@
     }@inputs:
     let
       system = "x86_64-linux";
-      nixarchserver = import ./hosts/nixarchserver {
-        pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = nixpkgs.legacyPackages.${system};
+      topology = (nixpkgs.lib.evalModules { modules = [ ./infra.nix ]; }).config.infra;
+      endpoints = import ./lib/service-endpoints.nix {
+        inherit (nixpkgs) lib;
+        infra = topology;
+      };
+      nixarchserver = import ./hosts/nixarchserver/build.nix {
+        inherit pkgs topology endpoints;
         comin = inputs.comin.packages.${system}.comin;
       };
     in
     {
-      nixosConfigurations = (denix.lib.configurations {
-        inherit nixpkgs;
-        home-manager = inputs.home-manager;
-        moduleSystem = "nixos";
-        paths = [
-          ./lib/declarations
-          ./modules
-          ./hosts/halo
-          ./hosts/vps
-        ];
-        extensions = with denix.lib.extensions; [
-          args
-          (base.withConfig { args.enable = true; })
-        ];
-        specialArgs = { inherit inputs; };
-      }) // {
-        # Comin's Linux flake executor expects this interface.
-        nixarchserver.config = {
-          system.build.toplevel = nixarchserver;
-          services.comin.machineId = null;
+      nixosConfigurations =
+        (denix.lib.configurations {
+          inherit nixpkgs;
+          home-manager = inputs.home-manager;
+          moduleSystem = "nixos";
+          paths = [
+            ./lib/declarations
+            ./modules/awg.nix
+            ./modules/base.nix
+            ./modules/haproxy.nix
+            ./modules/infrastructure.nix
+            ./modules/krozzzis.nix
+            ./modules/secrets.nix
+            ./modules/security
+            ./modules/udp.nix
+            ./hosts/halo/hardware.nix
+            ./hosts/halo/disko.nix
+            ./hosts/halo/network.nix
+            ./hosts/halo/nixos.nix
+            ./hosts/vps
+          ];
+          extensions = with denix.lib.extensions; [
+            args
+            (base.withConfig { args.enable = true; })
+          ];
+          specialArgs = { inherit inputs; };
+        })
+        // {
+          # Comin's Linux flake executor expects this interface.
+          nixarchserver.config = {
+            system.build.toplevel = nixarchserver;
+            services.comin.machineId = null;
+          };
         };
-      };
       packages.x86_64-linux.nixarchserver = nixarchserver;
-      packages.x86_64-linux.service-themes = self.nixosConfigurations.halo.config.infra.serviceThemes;
+      packages.x86_64-linux.inbuxa-config = import ./modules/services/inbuxa/package.nix {
+        inherit pkgs endpoints topology;
+        hostname = "nixarchserver";
+      };
+      packages.x86_64-linux.service-themes = import ./modules/branding/service-themes.nix {
+        inherit pkgs;
+        authentikProfile = topology.branding.${topology.hosts.nixarchserver.services.authentik.branding};
+        inbuxaProfile = topology.branding.${topology.hosts.nixarchserver.services.inbuxa.branding};
+        nextcloudProfile = topology.branding.${topology.hosts.nixarchserver.services.nextcloud.branding};
+      };
       checks.x86_64-linux = {
         inherit nixarchserver;
         vps = self.nixosConfigurations.vps.config.system.build.toplevel;

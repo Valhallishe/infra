@@ -1,11 +1,15 @@
-{ delib, ... }:
-delib.module {
-  name = "infra.services.peertube";
-  nixos.always.infra.services.peertube = {
-    inbound.web = { };
-    outbound.web = {
-      node = "archserver";
-      port = 9001;
+{ lib, ... }:
+{
+  options.services.peertube = import ../../lib/service-option.nix {
+    inherit lib;
+    options = {
+      branding = lib.mkOption { type = lib.types.str; };
+      adminEmail = lib.mkOption { type = lib.types.str; };
+      storage = lib.mkOption { type = lib.types.str; };
+      mount.path = lib.mkOption { type = lib.types.str; };
+      mount.unit = lib.mkOption { type = lib.types.str; };
+      mount.uuid = lib.mkOption { type = lib.types.str; };
+      secretFile = lib.mkOption { type = lib.types.path; };
     };
   };
 }

@@ -1,22 +1,32 @@
+{ config, ... }:
+let
+  toArch = subdomain: service: flow: {
+    domain = "${subdomain}.${config.infra.domain}";
+    to = {
+      host = "nixarchserver";
+      inherit service flow;
+    };
+  };
+in
 {
-  delib,
-  inputs,
-  config,
-  ...
-}:
-delib.host {
-  name = "halo";
-  useHomeManagerModule = false;
-  myconfig.infra.krozzzis.enable = true;
-  nixos = {
-    imports = [
-      inputs.disko.nixosModules.disko
-      inputs.comin.nixosModules.comin
-      inputs.agenix.nixosModules.default
-      inputs.stylix.nixosModules.stylix
+  infra.hosts.halo = {
+    node = "halo";
+    branding = "valhallishe";
+    services = {
+      awg.peer = "archserver";
+      comin.branch = "main";
+      inbuxaRelay.linkPort = 10443;
+    };
+    gateway.routes = [
+      (toArch "sso" "authentik" "http")
+      (toArch "videos" "peertube" "http")
+      (toArch "photos" "immich" "http")
+      (toArch "files" "nextcloud" "http")
+      (toArch "pass" "vaultwarden" "http")
+      (toArch "mail" "inbuxa" "webmail")
+      (toArch "admin.mail" "inbuxa" "admin")
+      (toArch "mc.play" "minecraft" "tcp")
+      (toArch "mc.play" "minecraft" "udp")
     ];
-    nixpkgs.hostPlatform = "x86_64-linux";
-    system.stateVersion = "26.05";
-    networking.hostName = "halo";
   };
 }

@@ -1,25 +1,20 @@
-infra:
+{ endpoints, routes }:
 map (
   route:
   let
-    service = infra.services.${route.service} or (throw "Unknown gateway service: ${route.service}");
-    inbound =
-      service.inbound.${route.inbound}
-        or (throw "Unknown inbound flow: ${route.service}.${route.inbound}");
-    outbound =
-      service.outbound.${route.outbound}
-        or (throw "Unknown outbound flow: ${route.service}.${route.outbound}");
+    backend = endpoints.backend route.to;
+    inbound = endpoints.listener route backend;
   in
   {
     inherit (route) domain;
     inherit (inbound) protocol tls;
     in_port = inbound.port;
-    out_port = outbound.port;
-    out_node = infra.nodes.${outbound.node};
-    out_protocol = outbound.protocol;
+    out_port = backend.port;
+    out_node = backend.node;
+    out_protocol = if backend.protocol == "https" then "https" else "http";
     proxy_protocol = {
       accept = inbound.acceptProxyProtocol;
-      send = outbound.proxyProtocol;
+      send = backend.proxyProtocol;
     };
   }
-) infra.web.routes
+) routes

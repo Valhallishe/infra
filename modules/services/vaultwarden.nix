@@ -1,11 +1,6 @@
-{ delib, ... }:
-delib.module {
-  name = "infra.services.vaultwarden";
-  nixos.always.infra.services.vaultwarden = {
-    inbound.web = { };
-    outbound.web = {
-      node = "archserver";
-      port = 6082;
-    };
+{ lib, ... }:
+{
+  options.services.vaultwarden = import ../../lib/service-option.nix {
+    inherit lib;
   };
 }

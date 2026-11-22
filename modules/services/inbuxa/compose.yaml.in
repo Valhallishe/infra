@@ -4,15 +4,15 @@ services:
     image: registry.coffeylabs.org/inbuxa/inbuxa-server:27.1-rc.5
     restart: unless-stopped
     environment:
-      INBUXA_ADMIN_URL: https://admin.mail.valhallishe.net
-      INBUXA_PUBLIC_URL: https://mail.valhallishe.net
-      INBUXA_WEBMAIL_URL: https://mail.valhallishe.net
+      INBUXA_ADMIN_URL: @adminUrl@
+      INBUXA_PUBLIC_URL: @webmailUrl@
+      INBUXA_WEBMAIL_URL: @webmailUrl@
     volumes:
       - ./config:/etc/inbuxa
       - ./data:/var/lib/inbuxa
     ports:
       - "127.0.0.1:18080:8080"
-      - "10.1.0.2:18083:8080"
+      - "@scimAddress@:@scimPort@:8080"
 
   webmail:
     image: registry.coffeylabs.org/inbuxa/inbuxa-webmail@sha256:70d240165bb2da2060e1c6c2b17233f3984a4f148cab77e7a0207f2f70adfef4
@@ -21,10 +21,10 @@ services:
       - webmail-secrets.env
     environment:
       MAIL_SERVER_URL: http://server:8080
-      PUBLIC_URL: https://mail.valhallishe.net
-      ADMIN_URL: https://admin.mail.valhallishe.net
-      APP_NAME: Valhallishe Mail
-      INBUXA_OIDC_ISSUER: https://sso.valhallishe.net/application/o/inbuxa-mail/
+      PUBLIC_URL: @webmailUrl@
+      ADMIN_URL: @adminUrl@
+      APP_NAME: @appName@
+      INBUXA_OIDC_ISSUER: @issuer@
     volumes:
       - ./oauth.js:/app/server/dist/oauth.js:ro
 
@@ -35,12 +35,12 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./theme:/etc/nginx/theme:ro
     ports:
-      - "10.1.0.2:18084:8080"
+      - "@webmailAddress@:@webmailPort@:8080"
 
   admin:
     image: registry.coffeylabs.org/inbuxa/inbuxa-admin@sha256:3c8b582e1f3b5d6cce34aa5563604e07a28982b02e3cf09d6c63bf8e5ef32e0e
     restart: unless-stopped
     environment:
-      API_BASE_URL: https://mail.valhallishe.net
+      API_BASE_URL: @webmailUrl@
     ports:
-      - "10.1.0.2:18081:8080"
+      - "@adminAddress@:@adminPort@:8080"

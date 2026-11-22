@@ -7,7 +7,7 @@ After=docker.service nixarchserver-awg.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/srv/docker/inbuxa
+WorkingDirectory=@dataDir@
 ExecStart=/usr/bin/docker compose up -d --no-build --pull never
 ExecStop=/usr/bin/docker compose stop
 TimeoutStartSec=120

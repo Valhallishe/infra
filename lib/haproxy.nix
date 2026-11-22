@@ -2,6 +2,7 @@
   lib,
   domain,
   routes,
+  brand,
   certificate,
   acmeAddress ? "127.0.0.1:8008",
 }:
@@ -133,7 +134,7 @@ in
     global
       log stdout format raw local0
     defaults
-    ${import ./error-pages.nix { inherit lib; }}
+    ${import ./error-pages.nix { inherit lib brand; }}
       log global
       timeout connect 10s
       timeout client 1h

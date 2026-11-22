@@ -1,16 +1,21 @@
 # nixarchserver
 
-Nix управляет Authentik и туннелем `infra0` на существующем Archserver.
+Nix управляет Authentik, PeerTube и туннелем `infra0` на существующем Archserver.
 Arch обслуживает Docker, firewall и системные пакеты. Имя узла в маршрутах
 Halo остаётся `archserver` с адресом `10.1.0.2`. Comin использует имя
 конфигурации `nixarchserver` и применяет ветку `main` этого репозитория.
 
-В Nix описаны образы OCI, Compose и юниты systemd. Authentik использует
+Образы OCI, Compose и юниты systemd находятся в `modules/services/`. Authentik использует
 Compose-проект `authentik`, внешний том `authentik_database` и существующие
 каталоги в `/srv/docker/authentik`. Учётные записи, группы и настройки
 провайдеров хранятся в PostgreSQL. Worker управляет Docker outpost, включая
 действующий LDAP outpost. Порты 5680 и 56443 охраняет
 `infra-docker-firewall.service`.
+
+В `default.nix` задаются профиль брендинга, имя внешнего тома PostgreSQL и
+каталог Authentik. После проверки готовности Authentik применяет выбранный
+профиль к записи бренда по умолчанию. При изменении настроек предыдущие
+значения сохраняются в `/data/valhallishe-backups`.
 
 Пароль PostgreSQL и ключ Authentik находятся в
 `secrets/nixarchserver-authentik.age`. AWG использует существующие
@@ -63,4 +68,6 @@ PeerTube использует группы Authentik `PeerTube Access` для в
 конфигурации прежняя безлимитная квота у учётных записей SSO заменяется
 этим значением. Локальная учётная запись администратора сохраняет доступ
 для обслуживания. Настройки OIDC применяются при запуске юнита, секрет
-клиента берётся из `secrets/nixarchserver-peertube.age`.
+клиента берётся из `secrets/nixarchserver-peertube.age`. Публичные URL PeerTube и
+Authentik вычисляются из маршрутов в `hosts/halo/default.nix` и используются в Compose,
+проверке API и настройке OIDC.

@@ -5,12 +5,12 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+settings_file, credentials_file, base, host, scheme = sys.argv[1:]
 credentials = dict(
     line.split("=", 1)
-    for line in Path("/run/nixarchserver-peertube/credentials").read_text().splitlines()
+    for line in Path(credentials_file).read_text().splitlines()
 )
-base = "http://10.1.0.2:9001/api/v1"
-headers = {"Host": "videos.valhallishe.net", "X-Forwarded-Proto": "https"}
+headers = {"Host": host, "X-Forwarded-Proto": scheme}
 
 
 def request(path, method="GET", body=None, form=False):
@@ -44,7 +44,7 @@ except urllib.error.HTTPError as error:
         raise
     request("/plugins/install", "POST", {"npmName": plugin, "pluginVersion": "2.1.1"})
 
-settings = json.loads(Path(sys.argv[1]).read_text())
+settings = json.loads(Path(settings_file).read_text())
 settings["client-secret"] = credentials["OIDC_SECRET"]
 request("/plugins/" + plugin + "/settings", "PUT", {"settings": settings})
 

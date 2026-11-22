@@ -81,13 +81,13 @@ ak-flow-executor::part(branding) {
 }
 
 /* Localized heading for the login flow. The flow title stays empty so the
-   browser tab continues to read "Valhallishe". */
+   browser tab continues to read "@brandName@". */
 ak-flow-executor[slug="default-authentication-flow"]::part(branding) {
     flex-direction: column;
     align-items: center;
 }
 ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after {
-    content: "Log in to Valhallishe";
+    content: "Log in to @brandName@";
     display: block;
     margin-block: 2rem 0;
     color: #@base05@;
@@ -95,19 +95,19 @@ ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after {
     font-weight: 500;
     text-align: center;
 }
-:lang(cs) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Přihlaste se do Valhallishe"; }
-:lang(de) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Bei Valhallishe anmelden"; }
-:lang(es) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Iniciar sesión en Valhallishe"; }
-:lang(fi) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Kirjaudu palveluun Valhallishe"; }
-:lang(fr) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Se connecter à Valhallishe"; }
-:lang(it) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Accedi a Valhallishe"; }
-:lang(ja) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Valhallishe にログイン"; }
-:lang(ko) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Valhallishe에 로그인"; }
-:lang(nl) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Inloggen bij Valhallishe"; }
-:lang(pl) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Zaloguj się do Valhallishe"; }
-:lang(pt) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Iniciar sessão no Valhallishe"; }
-:lang(pt-BR) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Entrar no Valhallishe"; }
-:lang(ru) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Войти в Valhallishe"; }
-:lang(tr) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Valhallishe hesabına giriş yap"; }
-:lang(zh) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "登录 Valhallishe"; }
-:lang(zh-Hant) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "登入 Valhallishe"; }
+:lang(cs) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Přihlaste se do @brandName@"; }
+:lang(de) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Bei @brandName@ anmelden"; }
+:lang(es) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Iniciar sesión en @brandName@"; }
+:lang(fi) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Kirjaudu palveluun @brandName@"; }
+:lang(fr) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Se connecter à @brandName@"; }
+:lang(it) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Accedi a @brandName@"; }
+:lang(ja) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "@brandName@ にログイン"; }
+:lang(ko) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "@brandName@에 로그인"; }
+:lang(nl) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Inloggen bij @brandName@"; }
+:lang(pl) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Zaloguj się do @brandName@"; }
+:lang(pt) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Iniciar sessão no @brandName@"; }
+:lang(pt-BR) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Entrar no @brandName@"; }
+:lang(ru) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "Войти в @brandName@"; }
+:lang(tr) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "@brandName@ hesabına giriş yap"; }
+:lang(zh) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "登录 @brandName@"; }
+:lang(zh-Hant) ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after { content: "登入 @brandName@"; }

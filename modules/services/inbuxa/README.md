@@ -17,7 +17,14 @@ HAProxy на Halo завершает TLS для `mail.valhallishe.net` и
 
 Изменения NixOS должны попасть в ветку main репозитория Comin: иначе следующее
 применение Comin может отменить маршруты и службу. Настройки Archserver
-применяются отдельно. Для проверки `sudo systemctl status inbuxa-relay` и
+применяются отдельно. Соберите комплект командой
+`nix build .#inbuxa-config --no-link --print-out-paths` и установите
+`compose.yaml`, `nginx.conf` и `oauth.js` в `/srv/docker/inbuxa`.
+Файл `infra-inbuxa.service` предназначен для `/etc/systemd/system/`.
+После обновления Compose примените его в рабочем каталоге через
+`docker compose up -d --no-build --pull never`. После изменения примонтированных
+файлов пересоздайте контейнеры `proxy` и `webmail`. Публичные URL и OIDC issuer
+берутся из маршрутов в `hosts/halo/default.nix`. Для проверки `sudo systemctl status inbuxa-relay` и
 `sudo -u inbuxa-relay /opt/inbuxa-relay/bin/inbuxa-relay status` на Halo.
 
 DKIM-ключи сгенерированы сервером. При ручном DNS необходимо опубликовать оба

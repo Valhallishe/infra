@@ -1,11 +1,9 @@
-{ delib, ... }:
-delib.module {
-  name = "infra.services.nextcloud";
-  nixos.always.infra.services.nextcloud = {
-    inbound.web = { };
-    outbound.web = {
-      node = "archserver";
-      port = 6084;
+{ lib, ... }:
+{
+  options.services.nextcloud = import ../../lib/service-option.nix {
+    inherit lib;
+    options = {
+      branding = lib.mkOption { type = lib.types.str; };
     };
   };
 }

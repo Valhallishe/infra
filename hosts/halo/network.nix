@@ -1,4 +1,10 @@
-{ delib, config, pkgs, inputs, ... }:
+{
+  delib,
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 delib.host {
   name = "halo";
   nixos = {
@@ -14,7 +20,6 @@ delib.host {
       path = "/run/systemd/network/10-wan.network";
       mode = "0644";
     };
-    infra.awg.enable = true;
     systemd.services.systemd-networkd.restartTriggers = [ (inputs.self + "/secrets/halo-network.age") ];
   };
 }

@@ -1,16 +1,19 @@
 {
   delib,
-  inputs,
   config,
   lib,
   ...
 }:
 let
   infra = config.infra;
+  endpoints = import ../lib/service-endpoints.nix { inherit lib infra; };
   routes = lib.filter (route: route.protocol == "udp") (
-    import (inputs.self + "/lib/gateway-routes.nix") infra
+    import ../lib/gateway-routes.nix {
+      inherit endpoints;
+      routes = infra.hosts.${config.networking.hostName}.gateway.routes or [ ];
+    }
   );
-  udp = import (inputs.self + "/lib/udp.nix") {
+  udp = import ../lib/udp.nix {
     inherit lib routes;
     interface = infra.network.interface;
     sourceIP = infra.nodes.${infra.web.node}.ip;
