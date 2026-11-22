@@ -27,9 +27,11 @@ delib.module {
         assertion =
           infra.awg.enable
           && lib.all (
-            r: builtins.elem r.out_node.ip (map (name: infra.nodes.${name}.ip) infra.awg.peers)
+            r:
+            r.pathPrefixes == [ ]
+            && builtins.elem r.out_node.ip (map (name: infra.nodes.${name}.ip) infra.awg.peers)
           ) routes;
-        message = "UDP backends must be configured AWG peers of this proxy.";
+        message = "UDP routes cannot match HTTP paths and must target a configured AWG peer of this proxy.";
       }
     ];
     networking.firewall.allowedUDPPorts = udp.ports;

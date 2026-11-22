@@ -14,7 +14,12 @@ let
   );
   cert = certificate;
   tcp = r: r.protocol == "tcp";
-  address = node: if lib.hasInfix ":" node.ip then "[${node.ip}]" else node.ip;
+  address = ip: if lib.hasInfix ":" ip then "[${ip}]" else ip;
+  pathMatch =
+    r:
+    lib.optionalString (
+      r.pathPrefixes != [ ]
+    ) " { path_beg ${lib.concatStringsSep " " r.pathPrefixes} }";
   send =
     r:
     {
@@ -27,7 +32,7 @@ let
   backend = r: ''
     backend ${r.id}
       mode ${if tcp r then "tcp" else "http"}
-      server target ${address r.out_node}:${toString r.out_port}${
+      server target ${address r.out_address}:${toString r.out_port}${
         lib.optionalString (r.out_protocol == "https")
           " ssl verify required ca-file /etc/ssl/certs/ca-certificates.crt sni str(${r.domain}) verifyhost ${r.domain}"
       }${send r}
@@ -36,6 +41,7 @@ let
     port: rs:
     let
       r = builtins.head rs;
+      byPath = lib.partition (r: r.pathPrefixes != [ ]) rs;
     in
     ''
       frontend port_${port}
@@ -59,8 +65,8 @@ let
                 port == "443"
               ) "http-request return status 200 if { hdr(host),field(1,:) -i ${domain} }"}
               ${lib.concatMapStringsSep "\n" (
-                r: "use_backend ${r.id} if { hdr(host),field(1,:) -i ${r.domain} }"
-              ) rs}
+                r: "use_backend ${r.id} if { hdr(host),field(1,:) -i ${r.domain} }${pathMatch r}"
+              ) (byPath.right ++ byPath.wrong)}
               default_backend unmatched
             ''
         }
@@ -89,6 +95,7 @@ in
         && (r.protocol == "http" -> r.tls == "none")
         && (r.tls == "passthrough" -> tcp r)
         && (!tcp r || r.out_protocol == "http")
+        && (tcp r -> r.pathPrefixes == [ ])
         && ((r.tls == "terminate" || !tcp r) -> r.domain != null)
         && (r.proxy_protocol.send == "v2-ssl" -> r.tls == "terminate")
       ) routes;
@@ -99,6 +106,13 @@ in
         rs:
         let
           first = builtins.head rs;
+          matches = lib.concatMap (
+            r:
+            map (path: {
+              inherit (r) domain;
+              inherit path;
+            }) (if r.pathPrefixes == [ ] then [ "" ] else r.pathPrefixes)
+          ) rs;
         in
         if tcp first then
           builtins.length rs == 1
@@ -114,12 +128,12 @@ in
             && r.tls == first.tls
             && r.proxy_protocol.accept == first.proxy_protocol.accept
           ) rs
-          && builtins.length (lib.unique (map (r: r.domain) rs)) == builtins.length rs
+          && builtins.length (lib.unique matches) == builtins.length matches
           && lib.all (r: r.domain != domain) rs
           && (first.in_port != 80 || (first.protocol == "http" && !first.proxy_protocol.accept))
           && (first.in_port != 443 || first.protocol == "https")
       ) (builtins.attrValues groups);
-      message = "Conflicting proxy listeners: TCP requires a dedicated port; shared HTTP ports require compatible TLS/PROXY settings and unique domains. Ports 80/443 and the base domain are reserved for HTTP ACME/HTTPS.";
+      message = "Conflicting proxy listeners: TCP requires a dedicated port; shared HTTP ports require compatible TLS/PROXY settings and unique domain/path matches. Ports 80/443 and the base domain are reserved for HTTP ACME/HTTPS.";
     }
   ];
   inherit domains;

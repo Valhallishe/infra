@@ -14,6 +14,11 @@ let
         type = types.nullOr (types.strMatching "[a-z0-9]([a-z0-9.-]*[a-z0-9])?");
         default = null;
       };
+      pathPrefixes = mkOption {
+        type = types.listOf (types.strMatching "/[a-zA-Z0-9/_-]+");
+        default = [ ];
+        description = "HTTP path prefixes to match before the host's fallback route.";
+      };
       to = {
         host = mkOption { type = types.str; };
         service = mkOption { type = types.str; };

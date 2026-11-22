@@ -10,6 +10,7 @@ let
   routes = lib.filter (route: route.protocol != "udp") (
     import ../../lib/gateway-routes.nix {
       inherit endpoints;
+      gateway = config.networking.hostName;
       routes = infra.hosts.${config.networking.hostName}.gateway.routes or [ ];
     }
   );

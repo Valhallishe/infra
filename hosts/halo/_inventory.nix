@@ -21,17 +21,41 @@ in
       awg.peer = "archserver";
       comin.branch = "main";
       inbuxaRelay.linkPort = 10443;
+      autopush.flows = {
+        connect.port = 8280;
+        endpoint.port = 8282;
+      };
     };
     gateway.routes = [
       (toArch "sso" "authentik" "http")
       (toArch "videos" "peertube" "http")
       (toArch "photos" "immich" "http")
-      (toArch "files" "nextcloud" "http")
+      (toArch "files" "opencloud" "http")
       (toArch "pass" "vaultwarden" "http")
       (toArch "mail" "inbuxa" "webmail")
       (toArch "admin.mail" "inbuxa" "admin")
       (toArch "mc.play" "minecraft" "tcp")
       (toArch "mc.play" "minecraft" "udp")
+      {
+        domain = "push.${config.infra.domain}";
+        to = {
+          host = "halo";
+          service = "autopush";
+          flow = "connect";
+        };
+      }
+      {
+        domain = "push.${config.infra.domain}";
+        pathPrefixes = [
+          "/wpush/"
+          "/m/"
+        ];
+        to = {
+          host = "halo";
+          service = "autopush";
+          flow = "endpoint";
+        };
+      }
     ];
   };
 }

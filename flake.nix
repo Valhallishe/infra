@@ -3,6 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+    # Autopush in 26.05 lacks Mozilla's fix for offline delivery with Redis (#1191).
+    nixpkgs-autopush.url = "github:NixOS/nixpkgs/nixos-unstable";
     import-tree.url = "github:vic/import-tree";
     denix.url = "github:yunfachi/denix";
     denix.inputs.home-manager.follows = "home-manager";

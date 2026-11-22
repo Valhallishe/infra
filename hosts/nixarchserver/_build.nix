@@ -32,6 +32,14 @@ let
     ssoUrl = (public "authentik").url;
     proxyAddress = topology.nodes.${topology.hosts.${host.publicGateway}.node}.ip;
   };
+  opencloud = import ../../modules/services/opencloud/_arch.nix {
+    inherit pkgs decrypt;
+    instance = host.services.opencloud;
+    brand = topology.branding.${host.services.opencloud.branding};
+    public = public "opencloud";
+    backend = endpoints.backend (target "opencloud");
+    ssoUrl = (public "authentik").url;
+  };
   inherit (topology.network) interface;
   awg = import ../../modules/awg/_arch.nix {
     inherit pkgs decrypt;
@@ -71,6 +79,12 @@ let
       name = "nixarchserver-peertube-access.timer";
       source = peertube.timer;
       target = "timers.target";
+    }
+  ]
+  ++ lib.optionals (host.services.opencloud != null) [
+    {
+      name = "nixarchserver-opencloud.service";
+      source = opencloud.unit;
     }
   ]
   ++ lib.optionals (host.services.comin != null) [

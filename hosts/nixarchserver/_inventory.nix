@@ -42,6 +42,18 @@
         };
       };
 
+      opencloud = {
+        branding = "valhallishe";
+        flows.http.port = 9200;
+        storage = "/media/disk/opencloud";
+        radicaleStorage = "/media/disk/radicale";
+        mount = {
+          path = "/media/disk";
+          unit = "media-disk.mount";
+          uuid = "a1493909-cb3c-466f-9d4c-f7fae62d05ab";
+        };
+      };
+
       # Existing installations published through Halo.
       immich.flows.http.port = 2283;
       nextcloud = {
