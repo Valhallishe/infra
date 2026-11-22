@@ -10,17 +10,24 @@ let
     mkdir -p "$out/web-app-radicale"
     tar xzf ${pluginTar} -C "$out/web-app-radicale" --no-xattrs
   '';
+  wordmark = color: pkgs.writeText "opencloud-logo.svg" (lib.replaceStrings
+    [ "#ffab65" "0 0 600 295" ''x="203" y="0" width="194" height="192"'' ''x="300" y="265" text-anchor="middle"'' ''font-size="47"'' ''letter-spacing="7"'' ]
+    [ color "0 0 420 80" ''x="0" y="0" width="80" height="80"'' ''x="94" y="54"'' ''font-size="38"'' ''letter-spacing="3"'' ]
+    (builtins.readFile brand.wordmark));
+  symbol = color: pkgs.writeText "opencloud-symbol.svg" (lib.replaceStrings [ "#ffab65" ] [ color ] (builtins.readFile brand.symbol));
   defaultTheme = builtins.fromJSON (builtins.readFile ./theme.json);
   themed = defaultTheme // {
-    common = defaultTheme.common // { name = brand.name; slogan = "${brand.name} Files"; logo = "themes/opencloud/assets/logo.svg"; };
+    common = defaultTheme.common // { name = brand.name; slogan = "${brand.name} Files"; logo = "themes/opencloud/assets/valhallishe-logo.svg"; };
     clients = defaultTheme.clients // {
       web = defaultTheme.clients.web // {
         defaults = defaultTheme.clients.web.defaults // {
-          logo = "themes/opencloud/assets/logo.svg";
-          logoMobile = "themes/opencloud/assets/symbol.svg";
-          favicon = "themes/opencloud/assets/symbol.svg";
+          logo = "themes/opencloud/assets/valhallishe-logo.svg";
+          logoMobile = "themes/opencloud/assets/valhallishe-symbol.svg";
+          favicon = "themes/opencloud/assets/valhallishe-symbol.svg";
         };
         themes = map (t: let c = if t.isDark then brand.dark else brand.light; in t // {
+          logo = if t.isDark then "themes/opencloud/assets/valhallishe-logo.svg" else "themes/opencloud/assets/valhallishe-logo-light.svg";
+          logoMobile = if t.isDark then "themes/opencloud/assets/valhallishe-symbol.svg" else "themes/opencloud/assets/valhallishe-symbol-light.svg";
           designTokens = t.designTokens // {
             roles = t.designTokens.roles // {
               primary = "#${c.base0D}";
@@ -35,9 +42,11 @@ let
   };
   theme = pkgs.runCommand "opencloud-theme" { } ''
     mkdir -p "$out/opencloud/assets"
-    cp ${brand.wordmark} "$out/opencloud/assets/logo.svg"
-    cp ${brand.symbol} "$out/opencloud/assets/symbol.svg"
-    cp ${pkgs.writeText "theme.json" (builtins.toJSON themed)} "$out/opencloud/theme.json"
+    cp ${wordmark "#${brand.dark.base0D}"} "$out/opencloud/assets/valhallishe-logo.svg"
+    cp ${wordmark "#${brand.light.base0D}"} "$out/opencloud/assets/valhallishe-logo-light.svg"
+    cp ${symbol "#${brand.dark.base0D}"} "$out/opencloud/assets/valhallishe-symbol.svg"
+    cp ${symbol "#${brand.light.base0D}"} "$out/opencloud/assets/valhallishe-symbol-light.svg"
+    cp ${pkgs.writeText "theme.json" (builtins.toJSON themed)} "$out/opencloud/valhallishe.json"
   '';
   proxy = pkgs.writeText "opencloud-proxy.yaml" (builtins.toJSON {
     additional_policies = [{ name = "default"; routes = map (route: {
@@ -135,12 +144,13 @@ let
           GRAPH_USERNAME_MATCH = "none";
           OC_OIDC_CLIENT_ID = "valhallishe-opencloud";
           WEB_OIDC_CLIENT_ID = "valhallishe-opencloud";
+          WEB_OPTION_DISABLE_SPONSOR_LINK = "true";
           WEBFINGER_WEB_OIDC_CLIENT_ID = "valhallishe-opencloud";
           WEBFINGER_DESKTOP_OIDC_CLIENT_ID = "valhallishe-opencloud";
           WEBFINGER_ANDROID_OIDC_CLIENT_ID = "valhallishe-opencloud";
           WEBFINGER_IOS_OIDC_CLIENT_ID = "valhallishe-opencloud";
           WEB_ASSET_THEMES_PATH = "/opt/branding";
-          WEB_UI_THEME_PATH = "/themes/opencloud/theme.json";
+          WEB_UI_THEME_PATH = "/themes/opencloud/valhallishe.json";
         };
         volumes = [
           "/run/nixarchserver-opencloud/opencloud.yaml:/etc/opencloud/opencloud.yaml:ro"
