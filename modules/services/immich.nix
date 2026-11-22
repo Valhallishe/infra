@@ -1,14 +1,11 @@
-{ delib, config, ... }:
+{ delib, ... }:
 delib.module {
   name = "infra.services.immich";
-  nixos.always.infra.services.immich.routes = [
-    {
-      domain = "photo.${config.infra.domain}";
-      protocol = "https";
-      in_port = 443;
-      in_node = config.infra.nodes.halo;
-      out_port = 2283;
-      out_node = config.infra.nodes.archserver;
-    }
-  ];
+  nixos.always.infra.services.immich = {
+    inbound.web = { };
+    outbound.web = {
+      node = "archserver";
+      port = 2283;
+    };
+  };
 }

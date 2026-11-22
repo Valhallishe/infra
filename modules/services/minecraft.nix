@@ -1,24 +1,23 @@
-{ delib, config, ... }:
+{ delib, ... }:
 delib.module {
   name = "infra.services.minecraft";
-  nixos.always.infra.services.minecraft.routes = [
-    {
-      domain = "mc.play.${config.infra.domain}";
+  nixos.always.infra.services.minecraft = {
+    inbound.tcp = {
       protocol = "tcp";
-      tls = "none";
-      in_port = 25565;
-      in_node = config.infra.nodes.halo;
-      out_port = 25565;
-      out_node = config.infra.nodes.archserver;
-      proxy_protocol.send = "v2";
-    }
-    {
-      domain = "mc.play.${config.infra.domain}";
+      port = 25565;
+    };
+    outbound.tcp = {
+      node = "archserver";
+      port = 25565;
+      proxyProtocol = "v2";
+    };
+    inbound.udp = {
       protocol = "udp";
-      in_port = 25565;
-      in_node = config.infra.nodes.halo;
-      out_port = 25565;
-      out_node = config.infra.nodes.archserver;
-    }
-  ];
+      port = 25565;
+    };
+    outbound.udp = {
+      node = "archserver";
+      port = 25565;
+    };
+  };
 }

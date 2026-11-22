@@ -10,6 +10,8 @@
     disko.url = "github:nix-community/disko";
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
+    stylix.url = "github:nix-community/stylix/release-26.05";
+    stylix.inputs.nixpkgs.follows = "nixpkgs";
     comin.url = "github:nlewo/comin";
     comin.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -38,6 +40,7 @@
         ];
         specialArgs = { inherit inputs; };
       };
+      packages.x86_64-linux.service-themes = self.nixosConfigurations.halo.config.infra.serviceThemes;
       checks.x86_64-linux = {
         vps = self.nixosConfigurations.vps.config.system.build.toplevel;
         halo = self.nixosConfigurations.halo.config.system.build.toplevel;

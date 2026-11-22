@@ -1,37 +1,37 @@
 /* VALHALLISHE · authentik 2026.2.1. Applied to document and component roots. */
 :root, :host, html[data-theme], .pf-theme-dark {
     color-scheme: dark;
-    --pf-global--primary-color--100: #ff8425;
-    --pf-global--primary-color--200: #ffad67;
-    --pf-global--primary-color--light-100: #ff8425;
-    --pf-global--primary-color--dark-100: #ff8425;
-    --pf-global--link--Color: #ffa15a;
-    --pf-global--link--Color--hover: #ffc18e;
-    --pf-global--active-color--100: #ff8425;
-    --pf-global--BackgroundColor--100: #17110e;
-    --pf-global--BackgroundColor--200: #0b0907;
-    --pf-global--BackgroundColor--300: #221710;
-    --pf-global--BackgroundColor--dark-100: #17110e;
-    --pf-global--BackgroundColor--dark-200: #0b0907;
-    --pf-global--Color--100: #fff0e4;
-    --pf-global--Color--200: #c6ad9c;
-    --pf-global--BorderColor--100: #60402b;
-    --pf-global--BorderColor--200: #38271c;
-    --ak-global--Color--100: #fff0e4;
-    --ak-global--Color--200: #c6ad9c;
-    --ak-global--BackgroundColor--100: #17110e;
-    --ak-global--BackgroundColor--200: #0b0907;
-    --ak-c-login__main--BackgroundColor: #17110e;
-    --ak-c-login__main--Color: #fff0e4;
+    --pf-global--primary-color--100: #@base0D@;
+    --pf-global--primary-color--200: #@base09@;
+    --pf-global--primary-color--light-100: #@base0D@;
+    --pf-global--primary-color--dark-100: #@base0D@;
+    --pf-global--link--Color: #@base09@;
+    --pf-global--link--Color--hover: #@base06@;
+    --pf-global--active-color--100: #@base0D@;
+    --pf-global--BackgroundColor--100: #@base01@;
+    --pf-global--BackgroundColor--200: #@base00@;
+    --pf-global--BackgroundColor--300: #@base02@;
+    --pf-global--BackgroundColor--dark-100: #@base01@;
+    --pf-global--BackgroundColor--dark-200: #@base00@;
+    --pf-global--Color--100: #@base05@;
+    --pf-global--Color--200: #@base04@;
+    --pf-global--BorderColor--100: #@base03@;
+    --pf-global--BorderColor--200: #@base02@;
+    --ak-global--Color--100: #@base05@;
+    --ak-global--Color--200: #@base04@;
+    --ak-global--BackgroundColor--100: #@base01@;
+    --ak-global--BackgroundColor--200: #@base00@;
+    --ak-c-login__main--BackgroundColor: #@base01@;
+    --ak-c-login__main--Color: #@base05@;
     --ak-c-login__main--BoxShadow: 0 28px 90px #0009;
     --ak-c-login__main-ColumnWidth: min(30rem, calc(100vw - 2rem));
     --ak-c-login--MaxWidth: 30rem;
 }
-body { background-color: #0b0907; }
+body { background-color: #@base00@; }
 ak-flow-executor::part(main) {
-    background: #17110ef5;
-    border: 1px solid #79411f;
-    border-top: 3px solid #f57922;
+    background: #@base01@f5;
+    border: 1px solid #@base03@;
+    border-top: 3px solid #@base0D@;
     border-radius: 18px;
     overflow: hidden;
 }
@@ -48,31 +48,31 @@ ak-flow-executor::part(branding) {
 }
 .pf-c-login__main-header { text-align: center; }
 .pf-c-form-control {
-    color: #fff0e4;
-    background-color: #100c09;
-    border-color: #60402b;
+    color: #@base05@;
+    background-color: #@base00@;
+    border-color: #@base03@;
     border-radius: 7px;
     min-height: 44px;
 }
-.pf-c-form-control:hover { border-color: #c66a2b; }
+.pf-c-form-control:hover { border-color: #@base0F@; }
 .pf-c-form-control:focus {
-    border-color: #ff8425;
-    box-shadow: 0 0 0 2px #ff842533;
+    border-color: #@base0D@;
+    box-shadow: 0 0 0 2px #@base0D@33;
 }
 .pf-c-button.pf-m-primary {
-    --pf-c-button--m-primary--BackgroundColor: #ff8425;
-    --pf-c-button--m-primary--Color: #1c0c03;
-    --pf-c-button--m-primary--hover--BackgroundColor: #ffad67;
-    --pf-c-button--m-primary--hover--Color: #1c0c03;
-    background: linear-gradient(110deg, #ff952e, #f16b1e);
-    color: #1c0c03;
+    --pf-c-button--m-primary--BackgroundColor: #@base0D@;
+    --pf-c-button--m-primary--Color: #@base00@;
+    --pf-c-button--m-primary--hover--BackgroundColor: #@base09@;
+    --pf-c-button--m-primary--hover--Color: #@base00@;
+    background: linear-gradient(110deg, #@base09@, #@base0D@);
+    color: #@base00@;
     font-weight: 700;
     min-height: 44px;
     border-radius: 7px;
 }
-.pf-c-button.pf-m-primary:hover { background: #ffad67; }
-:focus-visible { outline: 2px solid #ffad67; outline-offset: 3px; }
-.pf-c-login__main-footer-band { background: #100c09; border-top: 1px solid #38271c; }
+.pf-c-button.pf-m-primary:hover { background: #@base09@; }
+:focus-visible { outline: 2px solid #@base09@; outline-offset: 3px; }
+.pf-c-login__main-footer-band { background: #@base00@; border-top: 1px solid #@base02@; }
 @media (max-width: 35rem) {
     ak-flow-executor::part(main) { border-radius: 12px; margin-block: 3.5rem 1rem; }
     ak-flow-executor::part(branding) { padding: 1.5rem 1.2rem 1rem; }
@@ -89,7 +89,7 @@ ak-flow-executor[slug="default-authentication-flow"]::part(branding)::after {
     content: "Log in to Valhallishe";
     display: block;
     margin-block: 2rem 0;
-    color: #fff0e4;
+    color: #@base05@;
     font-size: 1.65rem;
     font-weight: 500;
     text-align: center;

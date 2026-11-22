@@ -8,7 +8,7 @@ https://sso.valhallishe.net. Прозрачный SVG повторяет кон�
 - `assets/valhallishe-symbol.svg` — знак без фона, также favicon.
 - `assets/valhallishe-logo.svg` — знак с надписью VALHALLISHE.
 - `assets/background.svg` — фон страницы.
-- `theme.css` — цвета, форма входа, кнопки, адаптация к мобильным экранам
+- `theme.css` — шаблон Stylix для цветов, формы входа, кнопок и адаптации к мобильным экранам
   и переводы заголовка входа для языков authentik 2026.2.1. Заголовок
   задаётся через CSS и переключается вместе с языком страницы.
 - `apply.py`, `restore.py`, `deploy.sh` — применение и откат через Django shell.
@@ -26,7 +26,8 @@ opttolerance 0.3). Растровое изображение в SVG не вст�
 ./deploy.sh archserver
 ```
 
-Нужны SSH и доступ к Docker. Скрипт использует штатные настройки бренда и
+Нужны Nix, SSH и доступ к Docker. Скрипт собирает CSS из палитры
+`hosts/halo/stylix.nix`. Готовый пакет можно передать через `SERVICE_THEMES`. Скрипт использует штатные настройки бренда и
 файловый менеджер authentik, не изменяет образ, compose или шаблоны.
 Изменяется существующий бренд `default=True` (на момент установки —
 `sso.valhallishe.net`).

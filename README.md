@@ -21,7 +21,7 @@ NixOS ACME автоматически получает сертификаты; D
 
 HAProxy также предоставляет `pass.valhallishe.net` по HTTPS, проксируя запросы к Vaultwarden на `archserver` через тот же туннель. DNS-запись этого имени управляется у DNS-провайдера.
 
-Immich доступен через `photo.valhallishe.net`: Halo завершает HTTPS и
+Immich доступен через `photos.valhallishe.net`: Halo завершает HTTPS и
 передаёт запросы через туннель на порт 2283 Archserver. DNS-запись управляется
 у DNS-провайдера.
 
@@ -66,76 +66,49 @@ Comin на `halo` проверяет ветку `main` на GitHub и приме
 
 - `infra.nix` — базовый домен инфраструктуры, единственное место его настройки.
 - `nodes/` — каталог узлов: hostId определяет адрес внутри общей подсети.
-- `modules/services/` — сервисы со списком `routes`.
+- `modules/services/` — именованные потоки `inbound` и `outbound` сервисов.
 - `lib/declarations/` и `lib/nixos/` — декларации Denix и типы настроек.
 - `modules/` — связующие модули; `modules/security/` — firewall, SSH,
   Fail2ban и CrowdSec.
 - `lib/haproxy.nix` — построение конфигурации HAProxy и проверки маршрутов.
-- `modules/haproxy.nix` — выбор маршрутов узла и связь с NixOS HAProxy, ACME и firewall.
+- `modules/haproxy.nix` — связь маршрутов gateway с NixOS HAProxy, ACME и firewall.
 - `modules/awg.nix` — общий модуль подключения узла к AWG.
 - `hosts/halo/` и `hosts/vps/` — состав хостов и параметры оборудования.
 
 Деревья типов и узлов подключаются через `import-tree`. Ссылки на файлы
 репозитория задаются от `inputs.self`.
 
-Для публикации сервиса добавьте `modules/services/example.nix`:
+Сервис объявляет потоки в `modules/services/`:
 
 ```nix
-{ delib, config, ... }:
-delib.module {
-  name = "infra.services.example";
-  nixos.always.infra.services.example.routes = [
-    {
-      domain = "example.${config.infra.domain}";
-      protocol = "https";
-      in_port = 443;
-      in_node = config.infra.nodes.halo;
-      out_port = 8080;
-      out_node = config.infra.nodes.archserver;
-      out_protocol = "http"; # значение по умолчанию
-    }
-  ];
-}
+nixos.always.infra.services.example = {
+  inbound.web = { };
+  outbound.web = { node = "archserver"; port = 8080; };
+};
 ```
 
-Хост с `myconfig.infra.web.enable = true` выбирает маршруты, чей `in_node.ip`
-совпадает с адресом его узла (`infra.web.node`, по умолчанию `networking.hostName`).
-Каждый сервис может объявлять несколько маршрутов с разными доменами, портами
-и входными/выходными узлами. Типы и значения по умолчанию заданы в `lib/nixos/web.nix`.
-
-`protocol` задаёт HTTP, HTTPS, TCP или UDP. UDP-маршруты применяет общий
-модуль nftables, HTTP/TCP — HAProxy. Для HTTPS `tls = "terminate"`
-по умолчанию: HAProxy завершает TLS и передаёт запрос в backend по HTTP.
-`out_protocol = "https"` включает TLS до backend с проверкой CA и имени.
-
-Для TCP укажите `protocol = "tcp"` и один из режимов:
-
-- `tls = "none"` — обычное TCP-проксирование;
-- `tls = "passthrough"` — прозрачная передача TLS, сертификат обслуживает backend;
-- `tls = "terminate"` — HAProxy завершает TLS и передаёт TCP без TLS в backend.
-
-TCP-маршрут занимает отдельный порт, домен для него необязателен, кроме
-режима TLS termination. TCP не маршрутизируется по домену/SNI; порты 80/443
-зарезервированы под HTTP ACME и HTTPS. Для TCP backend используется сырой
-транспорт (оставьте `out_protocol` по умолчанию).
-
-Пример TCP-маршрута с отправкой PROXY protocol v2:
+Gateway включает `myconfig.infra.web.enable` и публикует конкретную пару потоков.
+Пример записи в `nixos.infra.web.routes` из `hosts/halo/gateway.nix`:
 
 ```nix
 {
-  protocol = "tcp";
-  tls = "none";
-  in_port = 2222;
-  in_node = config.infra.nodes.halo;
-  out_port = 22;
-  out_node = config.infra.nodes.archserver;
-  proxy_protocol.send = "v2";
+  service = "example";
+  inbound = "web";
+  outbound = "web";
+  domain = "example.${config.infra.domain}";
 }
 ```
 
-`proxy_protocol.accept = true` требует PROXY-заголовок от входного соединения;
+По умолчанию вход принимает HTTPS на 443 с завершением TLS, выход использует HTTP.
+Для TLS до backend задайте `outbound.<имя>.protocol = "https"`.
+TCP занимает отдельный порт и поддерживает `tls = "none"`, `"passthrough"`
+и `"terminate"`. Для отправки PROXY protocol v2 задайте
+`outbound.<имя>.proxyProtocol = "v2"`. UDP перенаправляется через nftables
+на AWG peer. TCP и UDP без завершения TLS используют домен как DNS-имя gateway.
+
+`inbound.<имя>.acceptProxyProtocol = true` требует PROXY-заголовок от входного соединения;
 включайте его только на входах от доверенного upstream proxy.
-`proxy_protocol.send` поддерживает `none`, `v1`, `v2`, `v2-ssl`;
+`outbound.<имя>.proxyProtocol` поддерживает `none`, `v1`, `v2`, `v2-ssl`;
 последний вариант передаёт сведения о завершённом TLS. Backend должен явно
 поддерживать выбранный PROXY protocol: обычный sshd или HTTP-сервис такой
 заголовок не принимает. По умолчанию PROXY protocol выключен в обе стороны.
@@ -160,6 +133,37 @@ ACME listener `127.0.0.1:8008`. Базовый домен также включ�
 в `secrets/secrets.nix`. Шаблон Arch требует подстановки `@HALO_PUBLIC_KEY@`
 из `halo-awg-public.age` и приватного ключа из `archserver-awg.age`.
 
+
+## Nextcloud и Immich
+
+DNS для `files.valhallishe.net` и `photos.valhallishe.net` должен вести на Halo.
+Halo получает сертификаты ACME для обоих имён и проксирует запросы на
+Archserver: Nextcloud AIO на 6084, Immich на 2283.
+
+Для переключения Nextcloud сделайте резервную копию AIO, замените
+`cloud.sixty9.ru` на `files.valhallishe.net` в настройках mastercontainer
+[по инструкции Nextcloud AIO](https://github.com/nextcloud/all-in-one#how-to-change-the-domain)
+и перезапустите контейнеры через интерфейс AIO после публикации нового адреса.
+Проверьте канонический URL и настройки интеграций Nextcloud.
+Для Immich обновите публичный адрес сервера в настройках, если он задан,
+и адрес в клиентах.
+
+## Темы сервисов
+
+Палитра Stylix задаётся в `hosts/halo/stylix.nix`. Соберите артефакты и примените
+их к контейнерам на Archserver:
+
+```sh
+export SERVICE_THEMES=$(nix build "path:$PWD#service-themes" --no-link --print-out-paths)
+./themes/authentik/deploy.sh archserver
+./deployments/inbuxa/deploy-theme.sh archserver
+ssh archserver 'bash -s' < "$SERVICE_THEMES/nextcloud.sh"
+```
+
+Для inbuxa сначала обновите `compose.yaml` и `nginx.conf` в `/srv/docker/inbuxa`
+и пересоздайте контейнер `proxy` командой `docker compose up -d --no-deps --force-recreate proxy`.
+Authentik получает CSS вместе с текущими логотипом и фоном, inbuxa загружает
+CSS в webmail, Nextcloud получает основной цвет и цвет фона через OCC.
 
 ## Общая сеть AmneziaWG
 
@@ -201,7 +205,7 @@ Archserver пока управляется отдельно: после изме
 
 ## Minecraft
 
-`modules/services/minecraft.nix` публикует Java-сервер Valhallishe SMP:
+`hosts/halo/gateway.nix` публикует Java-сервер Valhallishe SMP:
 `mc.play.${infra.domain}:25565` → Halo HAProxy → AWG → Archserver Velocity
 на TCP 25565. Velocity направляет игроков в существующий `survival`.
 HAProxy отправляет PROXY protocol v2 для сохранения адреса игрока;

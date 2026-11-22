@@ -7,8 +7,8 @@
 }:
 let
   infra = config.infra;
-  routes = lib.filter (r: r.protocol == "udp" && r.in_node.ip == infra.nodes.${infra.web.node}.ip) (
-    lib.concatMap (service: service.routes) (builtins.attrValues infra.services)
+  routes = lib.filter (route: route.protocol == "udp") (
+    import (inputs.self + "/lib/gateway-routes.nix") infra
   );
   udp = import (inputs.self + "/lib/udp.nix") {
     inherit lib routes;
