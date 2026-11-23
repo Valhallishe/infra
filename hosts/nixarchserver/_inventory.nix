@@ -106,14 +106,17 @@ in
         secretFile = ../../secrets/nixarchserver-vaultwarden.age;
       };
 
-      # Existing installations published through Halo.
       immich = {
         flows.http.port = 2283;
         storage = {
-          library.kind = "external";
-          database.kind = "external";
+          project.location = "/srv/docker/immich";
+          library = onDisk "${fileStorage}/immich";
+          database.location = "${services.immich.storage.project.location}/postgres";
+          modelCache = dockerVolume "immich_model-cache";
         };
+        secretFile = ../../secrets/nixarchserver-immich.age;
       };
+      # Existing installations published through Halo.
       nextcloud = {
         branding = "valhallishe";
         flows.http.port = 6084;

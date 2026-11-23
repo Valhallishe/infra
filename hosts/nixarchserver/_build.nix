@@ -46,6 +46,11 @@ let
     backend = endpoints.backend (target "vaultwarden");
     ssoUrl = (public "authentik").url;
   };
+  immich = import ../../modules/services/immich/_arch.nix {
+    inherit pkgs decrypt;
+    instance = host.services.immich;
+    backend = endpoints.backend (target "immich");
+  };
   inbuxaConfig = import ../../modules/services/inbuxa/_package.nix {
     inherit pkgs endpoints topology;
     hostname = "nixarchserver";
@@ -133,6 +138,12 @@ let
       source = vaultwarden.unit;
     }
   ]
+  ++ lib.optionals (host.services.immich != null) [
+    {
+      name = "nixarchserver-immich.service";
+      source = immich.unit;
+    }
+  ]
   ++ lib.optionals (host.services.inbuxa != null) [
     {
       name = "infra-inbuxa.service";
@@ -155,7 +166,7 @@ let
     export PATH=/usr/bin
     umask 077
     directory=$(mktemp -d /run/nixarchserver-check.XXXXXXXX)
-    trap 'unlink "$directory/webmail-secrets.env" 2>/dev/null || :; unlink "$directory/vaultwarden.env" 2>/dev/null || :; unlink "$directory/authentik.env" 2>/dev/null || :; unlink "$directory/${interface}.conf" 2>/dev/null || :; rmdir "$directory"' EXIT
+    trap 'unlink "$directory/immich.env" 2>/dev/null || :; unlink "$directory/webmail-secrets.env" 2>/dev/null || :; unlink "$directory/vaultwarden.env" 2>/dev/null || :; unlink "$directory/authentik.env" 2>/dev/null || :; unlink "$directory/${interface}.conf" 2>/dev/null || :; rmdir "$directory"' EXIT
     ${lib.optionalString (host.services.authentik != null) ''
       ${authentik.command} check "$directory"
     ''}
@@ -164,6 +175,9 @@ let
     ''}
     ${lib.optionalString (host.services.inbuxa != null) ''
       ${inbuxaPrepare} "$directory"
+    ''}
+    ${lib.optionalString (host.services.immich != null) ''
+      ${immich.prepare} "$directory"
     ''}
     ${awg.prepare} "$directory"
     /usr/bin/awg-quick strip "$directory/${interface}.conf" >/dev/null
