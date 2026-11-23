@@ -164,6 +164,38 @@ ACME listener `127.0.0.1:8008`. Базовый домен также включ�
 порт 80 должен быть доступен извне. Email ACME по умолчанию —
 `admin@${infra.domain}`; переопределяется через `security.acme.defaults.email`.
 
+### Хранение данных
+
+Постоянные данные описываются в `infra.hosts.<host>.services.<service>.storage`.
+Каждая именованная запись задаёт вид хранилища (`kind`) и его расположение
+(`location`). Для `path` это абсолютный путь на хосте, для `dockerVolume` —
+фактическое имя тома Docker. `external` используется для развёртываний,
+которые управляются вне этой конфигурации. Если их расположение неизвестно
+инвентарю, `location` остаётся пустым.
+
+Пути для крупных файлов можно строить от `config.infra.fileStorage` (сейчас
+`/media/disk`). У записей OpenCloud и PeerTube поле `mount` связывает путь с
+systemd mount unit и проверкой UUID файловой системы перед запуском.
+
+Политика `backup` задаётся для каждой записи. `inherit` оставляет решение
+родительскому пути или будущей общей политике. Например, в инвентаре Archserver
+можно включить системные данные OpenCloud и исключить дерево пользовательского
+хранилища из него:
+
+```nix
+services.opencloud.storage = {
+  data.backup = "include";
+  files.backup = "exclude";
+};
+```
+
+Область `files` по умолчанию вложена в общий том OpenCloud и включает метаданные
+пользовательского хранилища. Полный бэкап OpenCloud должен учитывать и эту
+область. Подробнее в [документации OpenCloud по хранилищу](https://docs.opencloud.eu/docs/dev/server/services/storage-users/information/).
+
+Политики описывают состав будущих бэкапов. При изменении `location` перенос
+существующих данных выполняется отдельно.
+
 ## Nextcloud и Immich
 
 DNS для `files.valhallishe.net` и `photos.valhallishe.net` должен вести на Halo.

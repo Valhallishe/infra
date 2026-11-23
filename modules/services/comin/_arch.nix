@@ -4,13 +4,14 @@
   hostname,
   repository,
   branch,
+  storage,
 }:
 let
   inherit (pkgs) lib;
   cominConfig = pkgs.writeText "comin-${hostname}.json" (
     builtins.toJSON {
       inherit hostname;
-      state_dir = "/var/lib/comin";
+      state_dir = storage.state.location;
       repository_type = "flake";
       exporter.listen_address = "127.0.0.1";
       grpc.unix_socket_mode = "0600";

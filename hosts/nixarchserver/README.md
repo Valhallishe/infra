@@ -88,3 +88,17 @@ PDF, 3D Viewer и Unzip включаются независимо. Версии 
 хеши закреплены в модуле. Панели Audio Info и Image Info встроены в файловое
 приложение OpenCloud и появляются для файлов с соответствующими метаданными;
 отдельных переключателей для них OpenCloud не предоставляет.
+
+Vaultwarden на `https://pass.valhallishe.net` управляется юнитом
+`nixarchserver-vaultwarden.service`. При первом переключении Compose
+пересоздаёт контейнер в существующем проекте `vaultwarden` с той же версией
+образа. База SQLite, вложения и настройки из панели администратора остаются
+в `/srv/docker/vaultwarden/vw-data`. Перед переносом сохраните этот каталог
+целиком при остановленном контейнере. Для возврата к прежней конфигурации
+отключите новый юнит и запустите исходный Compose из `/srv/docker/vaultwarden`.
+
+URL Vaultwarden и Authentik берутся из маршрутов Halo. Секрет клиента SSO,
+токен администратора и ключи push хранятся в
+`secrets/nixarchserver-vaultwarden.age`. Юнит расшифровывает их в
+`/run/nixarchserver-vaultwarden`. Vaultwarden использует сохранённый
+`config.json` для параметров, заданных через панель администратора.

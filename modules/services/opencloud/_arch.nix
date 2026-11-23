@@ -1,7 +1,15 @@
 { pkgs, decrypt, instance, public, backend, ssoUrl, brand }:
 let
   inherit (pkgs) lib;
-  inherit (instance) storage radicaleStorage mount;
+  inherit (instance) storage;
+  dataDir = storage.data.location;
+  radicaleDir = storage.radicale.location;
+  filesDir = storage.files.location;
+  separateFiles = filesDir != "${dataDir}/storage/users";
+  directories = [ storage.config.location dataDir radicaleDir ] ++ lib.optional separateFiles filesDir;
+  mounts = import ../../../lib/storage-mounts.nix { inherit lib; } (
+    [ storage.data storage.config storage.radicale ] ++ lib.optional separateFiles storage.files
+  );
   pluginTar = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/kja999/opencloud-radicale-web-apps/3257f2ded2cef102a02b6680f57ef126eb8a34ee/web-app-radicale.tar.gz";
     hash = "sha256-SZcAkgnZRte3fSGtAhBXgLRfzYis4h8eLY7RHKr1CDU=";
@@ -169,12 +177,14 @@ let
         };
         volumes = [
           "/run/nixarchserver-opencloud/opencloud.yaml:/etc/opencloud/opencloud.yaml:ro"
-          "${storage}/data:/var/lib/opencloud"
+          "${dataDir}:/var/lib/opencloud"
           "${proxy}:/etc/opencloud/proxy.yaml:ro"
           "${csp}:/etc/opencloud/csp.yaml:ro"
           "${apps}:/var/lib/opencloud/web/assets/apps:ro"
           "${theme}:/opt/branding:ro"
-        ] ++ lib.optional instance.apps.unzip "${appsConfig}:/etc/opencloud/apps.yaml:ro";
+        ]
+        ++ lib.optional separateFiles "${filesDir}:/var/lib/opencloud/storage/users"
+        ++ lib.optional instance.apps.unzip "${appsConfig}:/etc/opencloud/apps.yaml:ro";
         depends_on = [ "radicale" ];
         restart = "unless-stopped";
       };
@@ -188,7 +198,7 @@ let
       radicale = {
         image = "opencloudeu/radicale:3.5.6@sha256:26047f5279cad5e02be725b2f7131043f77cc2a71e855021f347ba718f11e5be";
         user = "1000:1000";
-        volumes = [ "${radicaleStorage}:/var/lib/radicale" "${radicaleConfig}:/etc/radicale/config:ro" ];
+        volumes = [ "${radicaleDir}:/var/lib/radicale" "${radicaleConfig}:/etc/radicale/config:ro" ];
         restart = "unless-stopped";
       };
     };
@@ -201,8 +211,8 @@ let
     set -euo pipefail
     export PATH=/usr/bin
     if [[ $1 == up ]]; then
-      test "$(findmnt -n -o UUID --mountpoint ${lib.escapeShellArg mount.path})" = ${lib.escapeShellArg mount.uuid}
-      install -d -m 0750 -o 1000 -g 1000 ${lib.escapeShellArgs [ "${storage}/config" "${storage}/data" radicaleStorage ]}
+      ${mounts.check}
+      install -d -m 0750 -o 1000 -g 1000 ${lib.escapeShellArgs directories}
       ${decrypt ../../../secrets/nixarchserver-opencloud.age} > /run/nixarchserver-opencloud/opencloud.yaml
       chown 1000:1000 /run/nixarchserver-opencloud/opencloud.yaml
       chmod 0600 /run/nixarchserver-opencloud/opencloud.yaml
@@ -216,9 +226,7 @@ in {
     Description=OpenCloud and private Radicale
     Requires=docker.service nixarchserver-awg.service nixarchserver-authentik.service
     After=docker.service nixarchserver-awg.service nixarchserver-authentik.service
-    RequiresMountsFor=${storage} ${radicaleStorage}
-    BindsTo=${mount.unit}
-    After=${mount.unit}
+    ${mounts.unitConfig}
     [Service]
     Type=oneshot
     RemainAfterExit=yes

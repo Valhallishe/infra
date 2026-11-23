@@ -5,10 +5,6 @@
     options = {
       branding = lib.mkOption { type = lib.types.str; };
       adminEmail = lib.mkOption { type = lib.types.str; };
-      storage = lib.mkOption { type = lib.types.str; };
-      mount.path = lib.mkOption { type = lib.types.str; };
-      mount.unit = lib.mkOption { type = lib.types.str; };
-      mount.uuid = lib.mkOption { type = lib.types.str; };
       secretFile = lib.mkOption { type = lib.types.path; };
     };
   };

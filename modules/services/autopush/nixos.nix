@@ -18,7 +18,10 @@ let
   redis = config.services.redis.servers.autopush;
   autopush = inputs.nixpkgs-autopush.legacyPackages.${pkgs.stdenv.hostPlatform.system}.autopush-rs;
   db_dsn = "redis+unix://${redis.unixSocket}";
-  stateDir = "/var/lib/autopush";
+  redisStateDir = "/var/lib/redis-autopush";
+  redisLocation = instance.storage.redis.location;
+  stateDir = instance.storage.keys.location;
+  managedStateDir = lib.hasPrefix "/var/lib/" stateDir;
   keyFile = "${stateDir}/keys.env";
   dependencies = [
     "autopush-keys.service"
@@ -42,30 +45,43 @@ in
       appendOnly = true;
     };
 
+    systemd.services.redis-autopush = lib.mkIf (redisLocation != redisStateDir) {
+      unitConfig.RequiresMountsFor = redisLocation;
+      serviceConfig.BindPaths = [ "${redisLocation}:${redisStateDir}" ];
+    };
+    systemd.tmpfiles.settings.autopush = lib.mkIf (!managedStateDir) {
+      ${stateDir}.d = {
+        mode = "0700";
+        user = "root";
+        group = "root";
+      };
+    };
+
     systemd.services.autopush-keys = {
       description = "Initialize Mozilla Autopush keys";
       path = [
         pkgs.coreutils
         pkgs.openssl
       ];
+      unitConfig.RequiresMountsFor = lib.mkIf (!managedStateDir) stateDir;
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
-        StateDirectory = "autopush";
+        StateDirectory = lib.mkIf managedStateDir (lib.removePrefix "/var/lib/" stateDir);
         StateDirectoryMode = "0700";
         UMask = "0077";
       };
       script = ''
         set -o pipefail
-        if [ -s ${keyFile} ]; then
+        if [ -s ${lib.escapeShellArg keyFile} ]; then
           exit 0
         fi
-        tmp=$(mktemp ${stateDir}/keys.XXXXXXXX)
+        tmp=$(mktemp ${lib.escapeShellArg "${stateDir}/keys.XXXXXXXX"})
         trap 'rm -f "$tmp"' EXIT
         fernet=$(openssl rand -base64 32 | tr '/+' '_-')
         auth=$(openssl rand -base64 32 | tr '/+' '_-')
         printf 'AUTOCONNECT__CRYPTO_KEYS=[%s]\nAUTOEND__CRYPTO_KEYS=[%s]\nAUTOEND__AUTH_KEYS=[%s]\n' "$fernet" "$fernet" "$auth" > "$tmp"
-        mv "$tmp" ${keyFile}
+        mv "$tmp" ${lib.escapeShellArg keyFile}
       '';
     };
 

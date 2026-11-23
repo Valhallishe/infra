@@ -24,9 +24,14 @@ let
     umask 077
     ${pkgs.age}/bin/age -d -i /etc/ssh/ssh_host_ed25519_key ${../../../secrets/nixarchserver-inbuxa.age} > /run/infra-inbuxa/webmail-secrets.env
   '';
-  unit = pkgs.replaceVars ./infra-inbuxa.service.in { inherit (service) dataDir; inherit decrypt; };
+  unit = pkgs.replaceVars ./infra-inbuxa.service.in {
+    dataDir = service.storage.project.location;
+    inherit decrypt;
+  };
   # Compose inputs are rendered together with the gateway routes.
   compose = pkgs.replaceVars ./compose.yaml.in {
+    configMount = builtins.toJSON "${service.storage.config.location}:/etc/inbuxa";
+    mailMount = builtins.toJSON "${service.storage.mail.location}:/var/lib/inbuxa";
     appName = builtins.toJSON "${brand.name} Mail";
     webmailAddress = (backend "webmail").address;
     scimAddress = scim.address;

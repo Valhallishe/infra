@@ -137,6 +137,10 @@ in
         };
       };
     };
+    fileStorage = mkOption {
+      type = types.strMatching "/.*";
+      description = "Root directory for bulk file storage.";
+    };
     repository = lib.mkOption {
       type = lib.types.str;
       description = "Git repository used for infrastructure deployment.";

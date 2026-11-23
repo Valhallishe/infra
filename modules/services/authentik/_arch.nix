@@ -5,9 +5,11 @@
   branding,
 }:
 let
-  inherit (instance) dataDir secretFile;
+  inherit (instance) storage secretFile;
+  dataDir = storage.project.location;
+  directories = map (area: area.location) [ storage.data storage.templates storage.certificates ];
   port = instance.flows.http.port;
-  inherit (instance.database) volume;
+  volume = storage.database.location;
   image = "ghcr.io/goauthentik/server:2026.2.1@sha256:46a71d75dfd3eec9bd0fb42e5e13a245394e1be2d0828eebfbb2662421e66a35";
   postgres = "docker.io/library/postgres:16-alpine@sha256:890480b08124ce7f79960a9bb16fe39729aa302bd384bfd7c408fee6c8f7adb7";
   app = {
@@ -24,8 +26,8 @@ let
       AUTHENTIK_ERROR_REPORTING__ENABLED = "true";
     };
     volumes = [
-      "${dataDir}/data:/data"
-      "${dataDir}/custom-templates:/templates"
+      "${storage.data.location}:/data"
+      "${storage.templates.location}:/templates"
     ];
   };
   compose = pkgs.writeText "authentik-compose.json" (
@@ -67,7 +69,7 @@ let
           command = [ "worker" ];
           user = "root";
           volumes = app.volumes ++ [
-            "${dataDir}/certs:/certs"
+            "${storage.certificates.location}:/certs"
             "/var/run/docker.sock:/var/run/docker.sock"
           ];
         };
@@ -88,8 +90,8 @@ let
     args=(compose --project-name authentik --project-directory ${pkgs.lib.escapeShellArg dataDir} --env-file "$envFile" -f ${compose})
     mountpoint=$("$docker" volume inspect -f '{{.Mountpoint}}' ${pkgs.lib.escapeShellArg volume})
     test "$(cat "$mountpoint/PG_VERSION")" = 16
-    for directory in data custom-templates certs; do
-      test -d "${dataDir}/$directory"
+    for directory in ${pkgs.lib.escapeShellArgs directories}; do
+      test -d "$directory"
     done
     "$docker" "''${args[@]}" config --quiet
     if [[ $1 = start ]]; then

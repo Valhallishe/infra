@@ -8,8 +8,8 @@ services:
       INBUXA_PUBLIC_URL: @webmailUrl@
       INBUXA_WEBMAIL_URL: @webmailUrl@
     volumes:
-      - ./config:/etc/inbuxa
-      - ./data:/var/lib/inbuxa
+      - @configMount@
+      - @mailMount@
     ports:
       - "127.0.0.1:18080:8080"
       - "@scimAddress@:@scimPort@:8080"

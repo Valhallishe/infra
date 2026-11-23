@@ -25,7 +25,6 @@ let
   peertube = import ../../modules/services/peertube/_arch.nix {
     inherit pkgs decrypt;
     inherit (host.services.peertube) secretFile adminEmail storage;
-    inherit (host.services.peertube) mount;
     brand = topology.branding.${host.services.peertube.branding};
     public = public "peertube";
     backend = endpoints.backend (target "peertube");
@@ -40,6 +39,13 @@ let
     backend = endpoints.backend (target "opencloud");
     ssoUrl = (public "authentik").url;
   };
+  vaultwarden = import ../../modules/services/vaultwarden/_arch.nix {
+    inherit pkgs decrypt;
+    instance = host.services.vaultwarden;
+    public = public "vaultwarden";
+    backend = endpoints.backend (target "vaultwarden");
+    ssoUrl = (public "authentik").url;
+  };
   inherit (topology.network) interface;
   awg = import ../../modules/awg/_arch.nix {
     inherit pkgs decrypt;
@@ -50,7 +56,7 @@ let
   cominUnit = import ../../modules/services/comin/_arch.nix {
     inherit pkgs comin;
     inherit (topology) repository;
-    inherit (host.services.comin) branch;
+    inherit (host.services.comin) branch storage;
     hostname = "nixarchserver";
   };
   units = [
@@ -87,6 +93,12 @@ let
       source = opencloud.unit;
     }
   ]
+  ++ lib.optionals (host.services.vaultwarden != null) [
+    {
+      name = "nixarchserver-vaultwarden.service";
+      source = vaultwarden.unit;
+    }
+  ]
   ++ lib.optionals (host.services.comin != null) [
     {
       name = "comin.service";
@@ -103,9 +115,12 @@ let
     export PATH=/usr/bin
     umask 077
     directory=$(mktemp -d /run/nixarchserver-check.XXXXXXXX)
-    trap 'unlink "$directory/authentik.env" 2>/dev/null || :; unlink "$directory/${interface}.conf" 2>/dev/null || :; rmdir "$directory"' EXIT
+    trap 'unlink "$directory/vaultwarden.env" 2>/dev/null || :; unlink "$directory/authentik.env" 2>/dev/null || :; unlink "$directory/${interface}.conf" 2>/dev/null || :; rmdir "$directory"' EXIT
     ${lib.optionalString (host.services.authentik != null) ''
       ${authentik.command} check "$directory"
+    ''}
+    ${lib.optionalString (host.services.vaultwarden != null) ''
+      ${vaultwarden.prepare} "$directory"
     ''}
     ${awg.prepare} "$directory"
     /usr/bin/awg-quick strip "$directory/${interface}.conf" >/dev/null

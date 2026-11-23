@@ -19,11 +19,23 @@ in
     branding = "valhallishe";
     services = {
       awg.peer = "archserver";
-      comin.branch = "main";
-      inbuxaRelay.linkPort = 10443;
-      autopush.flows = {
-        connect.port = 8280;
-        endpoint.port = 8282;
+      comin = {
+        branch = "main";
+        storage.state.location = "/var/lib/comin";
+      };
+      inbuxaRelay = {
+        linkPort = 10443;
+        storage.state.location = "/var/lib/inbuxa-relay";
+      };
+      autopush = {
+        flows = {
+          connect.port = 8280;
+          endpoint.port = 8282;
+        };
+        storage = {
+          keys.location = "/var/lib/autopush";
+          redis.location = "/var/lib/redis-autopush";
+        };
       };
     };
     gateway.routes = [

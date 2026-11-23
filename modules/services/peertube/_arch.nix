@@ -8,11 +8,12 @@
   adminEmail,
   proxyAddress,
   storage,
-  mount,
   brand,
 }:
 let
   inherit (pkgs) lib;
+  files = storage.files.location;
+  mounts = import ../../../lib/storage-mounts.nix { inherit lib; } [ storage.files ];
   backendAddress = "${backend.address}:${toString backend.port}";
   apiUrl = "${backend.protocol}://${backendAddress}/api/v1";
   credentials = "${runtime}/credentials";
@@ -110,7 +111,7 @@ let
           image = "chocobozzz/peertube:v8.3.2";
           ports = [ "${backendAddress}:9000" ];
           volumes = [
-            "${storage}:/data"
+            "${files}:/data"
             "config:/config"
             "${runtime}/access:/run/peertube-access:ro"
             "${publishPlugin}:${pluginPath}:ro"
@@ -181,9 +182,9 @@ let
         };
       };
       volumes = {
-        config = { };
-        postgres = { };
-        redis = { };
+        config.name = storage.config.location;
+        postgres.name = storage.database.location;
+        redis.name = storage.redis.location;
       };
     }
   );
@@ -192,8 +193,8 @@ let
     export PATH=/usr/bin
     umask 077
     if [[ $1 == up ]]; then
-      test "$(findmnt -n -o UUID --mountpoint ${lib.escapeShellArg mount.path})" = ${lib.escapeShellArg mount.uuid}
-      mkdir -p ${lib.escapeShellArg storage}
+      ${mounts.check}
+      mkdir -p ${lib.escapeShellArg files}
       install -d -m 0755 ${runtime}/access
       ${decrypt secretFile} > "${credentials}"
     fi
@@ -209,9 +210,7 @@ in
     Description=PeerTube on nixarchserver
     Requires=docker.service nixarchserver-awg.service nixarchserver-authentik.service
     After=docker.service nixarchserver-awg.service nixarchserver-authentik.service
-    RequiresMountsFor=${storage}
-    BindsTo=${mount.unit}
-    After=${mount.unit}
+    ${mounts.unitConfig}
 
     [Service]
     Type=oneshot
