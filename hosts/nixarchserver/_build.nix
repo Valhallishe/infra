@@ -98,7 +98,38 @@ let
     inherit (host.services.comin) branch storage;
     hostname = "nixarchserver";
   };
+  containerFirewall = pkgs.writeShellScript "nixarchserver-container-firewall" ''
+    set -euo pipefail
+    export PATH=/usr/bin
+    rules=$(mktemp /run/container-firewall.XXXXXXXX)
+    trap 'rm -f "$rules"' EXIT
+    if nft list table inet infra-container-isolation >/dev/null 2>&1; then
+      echo 'delete table inet infra-container-isolation' >> "$rules"
+    fi
+    cat ${../../archserver/container-isolation.nft} >> "$rules"
+    nft -c -f "$rules"
+    nft -f "$rules"
+  '';
+  containerFirewallUnit = pkgs.writeTextDir "nixarchserver-container-firewall.service" ''
+    [Unit]
+    Description=Isolate container networks from the host
+    Before=docker.service
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=${containerFirewall}
+    ExecReload=${containerFirewall}
+
+    [Install]
+    RequiredBy=docker.service
+    WantedBy=multi-user.target
+  '';
   units = [
+    {
+      name = "nixarchserver-container-firewall.service";
+      source = containerFirewallUnit;
+    }
     {
       name = "nixarchserver-awg.service";
       source = awg.unit;
@@ -222,6 +253,8 @@ let
     ${lib.concatMapStringsSep "\n" (unit: ''
       ln -sfn "../${unit.name}" "$directory/${targetOf unit}.wants/${unit.name}"
     '') enableUnits}
+    install -d "$directory/docker.service.requires"
+    ln -sfn ../nixarchserver-container-firewall.service "$directory/docker.service.requires/nixarchserver-container-firewall.service"
     systemctl daemon-reload
     if systemctl is-active --quiet awg-quick@${interface}.service; then
       if ! systemctl start nixarchserver-awg.service; then
@@ -233,7 +266,8 @@ let
     fi
     for unit in "''${changed[@]}"; do
       case "$unit" in
-        ${lib.concatMapStringsSep "|" (unit: unit.name) startUnits}) systemctl restart "$unit" ;;
+        nixarchserver-container-firewall.service) systemctl reload-or-restart "$unit" ;;
+        ${lib.concatMapStringsSep "|" (unit: unit.name) (builtins.filter (unit: unit.name != "nixarchserver-container-firewall.service") startUnits)}) systemctl restart "$unit" ;;
       esac
     done
     for unit in ${unitNames startUnits}; do

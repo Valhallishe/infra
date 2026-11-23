@@ -1,0 +1,14 @@
+table inet infra-container-isolation {
+  chain prerouting {
+    type filter hook prerouting priority -110; policy accept;
+    ct state established,related accept
+    # Check before Docker's destination NAT so published host addresses cannot
+    # be used by a container to reach the host or another published service.
+    iifname { "docker0", "br-*" } fib daddr type local counter drop
+  }
+  chain input {
+    type filter hook input priority -10; policy accept;
+    ct state established,related accept
+    iifname { "docker0", "br-*" } counter drop
+  }
+}

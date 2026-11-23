@@ -14,6 +14,7 @@ let
       inherit (instance) image;
       container_name = "vaultwarden";
       restart = "unless-stopped";
+      security_opt = [ "no-new-privileges:true" ];
       env_file = [
         {
           path = "${runtime}/vaultwarden.env";

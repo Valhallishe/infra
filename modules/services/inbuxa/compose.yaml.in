@@ -3,6 +3,8 @@ services:
   server:
     image: registry.coffeylabs.org/inbuxa/inbuxa-server:27.1-rc.5
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
       INBUXA_ADMIN_URL: @adminUrl@
       INBUXA_PUBLIC_URL: @webmailUrl@
@@ -17,6 +19,8 @@ services:
   webmail:
     image: registry.coffeylabs.org/inbuxa/inbuxa-webmail@sha256:70d240165bb2da2060e1c6c2b17233f3984a4f148cab77e7a0207f2f70adfef4
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     env_file:
       - /run/infra-inbuxa/webmail-secrets.env
     environment:
@@ -31,6 +35,8 @@ services:
   proxy:
     image: nginx:1.27-alpine
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     volumes:
       - @nginxMount@
       - @themeMount@
@@ -40,6 +46,8 @@ services:
   admin:
     image: registry.coffeylabs.org/inbuxa/inbuxa-admin@sha256:3c8b582e1f3b5d6cce34aa5563604e07a28982b02e3cf09d6c63bf8e5ef32e0e
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
       API_BASE_URL: @webmailUrl@
     ports:

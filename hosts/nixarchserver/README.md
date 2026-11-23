@@ -102,3 +102,18 @@ URL Vaultwarden и Authentik берутся из маршрутов Halo. Сек
 `secrets/nixarchserver-vaultwarden.age`. Юнит расшифровывает их в
 `/run/nixarchserver-vaultwarden`. Vaultwarden использует сохранённый
 `config.json` для параметров, заданных через панель администратора.
+
+Изоляция сети контейнеров на Archserver задаётся правилами
+[`container-isolation.nft`](../../archserver/container-isolation.nft), которые
+`nixarchserver-container-firewall.service` загружает до запуска Docker. Для
+стандартных мостов `docker0` и `br-*` новые соединения к адресам хоста
+отбрасываются до Docker DNAT; ответы на соединения, начатые хостом, разрешены.
+Действующий `infra-docker-firewall.service` отдельно ограничивает входящие
+опубликованные порты. При использовании Docker-моста с другим именем правила
+нужно дополнить. Доступ Authentik worker к Docker socket остаётся исключением:
+он необходим действующему управлению LDAP outpost и позволяет обойти изоляцию.
+
+Caddy и Nextcloud AIO на Archserver отключены. Административный бот и его
+исходящий прокси работают в отдельной сети Compose `/srv/docker/s9_admin_bot`;
+порт сборщика опубликован только на адресе туннеля. Их конфигурация пока
+управляется вне этого репозитория.
