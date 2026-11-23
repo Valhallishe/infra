@@ -17,6 +17,19 @@ let
   authentik = import ../../modules/services/authentik/_arch.nix {
     inherit pkgs decrypt;
     instance = host.services.authentik;
+    home = "${topology.systemStorage}/authentik";
+    scimUrl = (endpoints.public host.publicGateway { host = "nixarchserver"; service = "inbuxa"; flow = "webmail"; }).url + "/scim/v2";
+    network = import ../../lib/routed-container-network.nix {
+      inherit pkgs;
+      name = "auth";
+      serviceAddress = host.services.authentik.overlayAddress;
+      gatewaySources = with topology.nodes.halo; [ ip serviceHostIp ];
+      awgInterface = topology.network.interface;
+      uplinkInterface = "enp45s0";
+      linkSubnet = "169.254.250";
+      ports = with host.services.authentik.flows; [ http.port https.port ];
+      httpsEgress = true;
+    };
     branding = import ../../modules/services/authentik/_branding.nix {
       inherit pkgs;
       brand = topology.branding.${host.services.authentik.branding};
@@ -40,6 +53,7 @@ let
       httpsEgress = true;
     };
     ssoUrl = (public "authentik").url;
+    execAuthentik = authentik.execWorker;
     proxyAddress = topology.nodes.${topology.hosts.${host.publicGateway}.node}.ip;
   };
   opencloud = import ../../modules/services/opencloud/_arch.nix {
@@ -60,6 +74,7 @@ let
       httpsEgress = true;
     };
     ssoUrl = (public "authentik").url;
+    execAuthentik = authentik.execWorker;
   };
   vaultwarden = import ../../modules/services/vaultwarden/_arch.nix {
     inherit pkgs decrypt;

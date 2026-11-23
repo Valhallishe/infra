@@ -41,14 +41,15 @@ in
       authentik = {
         overlayAddress = "10.1.2.2";
         branding = "valhallishe";
-        flows.http.port = 5680;
-        httpsPort = 56443;
+        flows = {
+          http = { port = 80; overlay = true; };
+          https = { port = 443; protocol = "https"; overlay = true; };
+        };
         storage = {
-          project.location = "/srv/docker/authentik";
-          data.location = "${services.authentik.storage.project.location}/data";
-          templates.location = "${services.authentik.storage.project.location}/custom-templates";
-          certificates.location = "${services.authentik.storage.project.location}/certs";
-          database = dockerVolume "authentik_database";
+          data.location = "${config.infra.systemStorage}/authentik/data";
+          templates.location = "${config.infra.systemStorage}/authentik/custom-templates";
+          certificates.location = "${config.infra.systemStorage}/authentik/certs";
+          database.location = "${config.infra.systemStorage}/authentik/postgres";
         };
         secretFile = ../../secrets/nixarchserver-authentik.age;
       };

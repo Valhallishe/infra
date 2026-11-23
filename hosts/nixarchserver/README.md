@@ -5,17 +5,18 @@ Arch обслуживает Docker, firewall и системные пакеты.
 Halo остаётся `archserver` с адресом `10.1.0.2`. Comin использует имя
 конфигурации `nixarchserver` и применяет ветку `main` этого репозитория.
 
-Образы OCI, Compose и юниты systemd находятся в `modules/services/`. Authentik использует
-Compose-проект `authentik`, внешний том `authentik_database` и существующие
-каталоги в `/srv/docker/authentik`. Учётные записи, группы и настройки
-провайдеров хранятся в PostgreSQL. Worker управляет Docker outpost, включая
-действующий LDAP outpost. Порты 5680 и 56443 охраняет
-`infra-docker-firewall.service`.
+Образы OCI и юниты systemd находятся в `modules/services/`. Authentik
+работает в rootless Podman. Halo обращается к `10.1.2.2:80` через AWG.
+Учётные записи, группы и настройки провайдеров остаются в PostgreSQL.
+Актуальные данные Authentik хранятся в `/var/lib/infra-services/authentik`.
+Том `authentik_database` и каталоги в `/srv/docker/authentik` сохранены
+в состоянии на момент переключения.
 
-В `default.nix` задаются профиль брендинга, имя внешнего тома PostgreSQL и
-каталог Authentik. После проверки готовности Authentik применяет выбранный
-профиль к записи бренда по умолчанию. При изменении настроек предыдущие
-значения сохраняются в `/data/valhallishe-backups`.
+Профиль брендинга и точки хранения задаются в инвентаре. После проверки
+готовности юнит применяет профиль к бренду по умолчанию. При изменении
+настроек прежние значения сохраняются в `/data/valhallishe-backups`.
+Worker работает без доступа к Docker socket. Ранее остановленный
+LDAP outpost из Docker сохранён. SCIM подключается к Inbuxa по HTTPS.
 
 Пароль PostgreSQL и ключ Authentik находятся в
 `secrets/nixarchserver-authentik.age`. AWG использует существующие
@@ -42,14 +43,11 @@ Comin ожидает интерфейс `nixosConfigurations.*.config.system.bui
 `/nix/var/nix/profiles/nixarchserver`. При изменении конфига Comin сам
 перезапускает свой юнит после записи результата применения.
 
-Перед первым переключением проверьте восстановление зашифрованного
-`pg_dump -Fc` в изолированном PostgreSQL 16. Остановите server и worker на
-время финальной копии базы и архива `data`, `certs` и `custom-templates`.
-Переключение переиспользует исходный том и версию PostgreSQL. Юнит AWG
-проверяет совпадение конфигурации перед заменой старого активного юнита.
-Выполняйте переключение через SSH по LAN, чтобы доступ пережил перезапуск
-`infra0`. После переключения проверьте страницу входа через Halo,
-состояние worker и LDAP outpost.
+При переносе Authentik остановите server и worker перед финальной копией
+PostgreSQL и каталогов `data`, `certs` и `custom-templates`. После
+переключения проверьте страницу входа через Halo, состояние worker и
+провайдера SCIM. Выполняйте переключение через SSH по LAN, чтобы доступ
+пережил перезапуск `infra0`.
 
 Резервные копии первого переноса находятся в `/var/backups/nixarchserver`.
 Их можно расшифровать с помощью `age -d -i` ключом администратора или
@@ -120,7 +118,6 @@ Docker сохранены в состоянии на момент переклю
 Действующий `infra-docker-firewall.service` отдельно ограничивает входящие
 опубликованные порты. При использовании Docker-моста с другим именем правила
 нужно дополнить. Доступ Authentik worker к Docker socket остаётся исключением:
-он необходим действующему управлению LDAP outpost и позволяет обойти изоляцию.
 
 Caddy и Nextcloud AIO на Archserver отключены. Административный бот и его
 исходящий прокси работают в отдельной сети Compose `/srv/docker/s9_admin_bot`;

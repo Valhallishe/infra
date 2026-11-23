@@ -8,6 +8,7 @@
   ssoUrl,
   adminEmail,
   proxyAddress,
+  execAuthentik,
   storage,
   brand,
 }:
@@ -81,7 +82,7 @@ let
         print("client_secret = " + repr(credentials["OIDC_SECRET"]))
     print(Path("${./oidc.py}").read_text())
     PYTHON
-      docker exec -i -e AUTHENTIK_LOG_LEVEL=error authentik-worker-1 ak shell --no-imports |
+      ${execAuthentik} |
       sed -n 's/^PEERTUBE_PUBLISH=//p' > "$snapshot"
     test -s "$snapshot"
     chgrp ${oci.account} "$snapshot"

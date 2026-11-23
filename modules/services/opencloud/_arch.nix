@@ -1,4 +1,4 @@
-{ pkgs, decrypt, instance, public, ssoUrl, brand, network, home }:
+{ pkgs, decrypt, instance, public, ssoUrl, brand, network, home, execAuthentik }:
 let
   inherit (pkgs) lib;
   inherit (instance) storage;
@@ -236,7 +236,7 @@ let
     done
     ${decrypt ../../../secrets/nixarchserver-opencloud.age} > ${runtime}/opencloud.yaml
     chown ${oci.account}:${oci.account} ${runtime}/opencloud.yaml
-    docker exec -i authentik-worker-1 ak shell --no-imports < ${oidc}
+    ${execAuthentik} < ${oidc}
   '';
   run = pkgs.writeShellScript "opencloud-podman-stack" ''
     set -euo pipefail
