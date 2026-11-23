@@ -20,6 +20,10 @@ let
     ${lib.optionalString instance.apps.model3d "unzip -q ${model3d} -d $out"}
     ${lib.optionalString instance.apps.unzip "unzip -q ${unzipApp} -d $out"}
   '';
+  appsConfig = pkgs.writeText "opencloud-apps.yaml" (builtins.toJSON {
+    # Unzip converts this string to JavaScript Infinity before comparing sizes.
+    unzip.config.maxArchiveSize = "Infinity";
+  });
   wordmark = color: pkgs.writeText "opencloud-logo.svg" (lib.replaceStrings
     [ "#ffab65" "0 0 600 295" ''x="203" y="0" width="194" height="192"'' ''x="300" y="265" text-anchor="middle"'' ''font-size="47"'' ''letter-spacing="7"'' ]
     [ color "0 0 420 80" ''x="0" y="0" width="80" height="80"'' ''x="94" y="54"'' ''font-size="38"'' ''letter-spacing="3"'' ]
@@ -170,7 +174,7 @@ let
           "${csp}:/etc/opencloud/csp.yaml:ro"
           "${apps}:/var/lib/opencloud/web/assets/apps:ro"
           "${theme}:/opt/branding:ro"
-        ];
+        ] ++ lib.optional instance.apps.unzip "${appsConfig}:/etc/opencloud/apps.yaml:ro";
         depends_on = [ "radicale" ];
         restart = "unless-stopped";
       };
