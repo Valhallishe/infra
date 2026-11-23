@@ -36,7 +36,18 @@ let
     instance = host.services.opencloud;
     brand = topology.branding.${host.services.opencloud.branding};
     public = public "opencloud";
-    backend = endpoints.backend (target "opencloud");
+    home = "${topology.systemStorage}/opencloud";
+    network = import ../../lib/routed-container-network.nix {
+      inherit pkgs;
+      name = "opencloud";
+      serviceAddress = host.services.opencloud.overlayAddress;
+      gatewaySources = with topology.nodes.halo; [ ip serviceHostIp ];
+      awgInterface = topology.network.interface;
+      uplinkInterface = "enp45s0";
+      linkSubnet = "169.254.254";
+      ports = [ host.services.opencloud.flows.http.port ];
+      httpsEgress = true;
+    };
     ssoUrl = (public "authentik").url;
   };
   vaultwarden = import ../../modules/services/vaultwarden/_arch.nix {

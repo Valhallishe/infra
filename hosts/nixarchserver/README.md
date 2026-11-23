@@ -72,16 +72,15 @@ PeerTube использует группы Authentik `PeerTube Access` для в
 Authentik вычисляются из маршрутов в `hosts/halo/_inventory.nix` и используются в Compose,
 проверке API и настройке OIDC.
 
-OpenCloud и Radicale описаны в `modules/services/opencloud`. Постоянные данные OpenCloud находятся в `/media/disk/opencloud`, коллекции
-Radicale — отдельно в `/media/disk/radicale`; оба каталога необходимо
-резервировать. Внутренняя
-конфигурация и секреты OpenCloud зашифрованы в `secrets/nixarchserver-opencloud.age`
-и расшифровываются при запуске в `/run`. Запуск проверяет UUID диска, а systemd останавливает
-службу при его отключении. Radicale доступен только в сети контейнеров;
-защищённые DAV-маршруты проходят через OpenCloud. Для отображения календаря
-и контактов установлено стороннее расширение `opencloud-radicale-web-apps`.
-Учетные записи создаются при первом входе через Authentik. Данные Nextcloud
-автоматически не переносятся. Подключение Inbuxa не изменяется.
+OpenCloud, nginx и Radicale работают в одном rootless pod. Halo обращается к
+`10.1.2.5:80` через AWG. Файлы пользователей остаются в
+`/media/disk/opencloud/data/storage/users` и доступны контейнеру через ACL.
+Служебное состояние OpenCloud и коллекции Radicale хранятся в
+`/var/lib/infra-services/opencloud`. Исходные каталоги состояния сохранены.
+Секреты OpenCloud зашифрованы в `secrets/nixarchserver-opencloud.age` и
+расшифровываются в `/run`. Юнит проверяет UUID диска с файлами перед запуском.
+DAV-маршруты проходят через OpenCloud, Radicale слушает loopback внутри pod.
+Аккаунты создаются при первом входе через Authentik.
 
 Приложения OpenCloud задаются в `services.opencloud.apps` инвентаря: EPUB,
 PDF, 3D Viewer и Unzip включаются независимо. Версии внешних приложений и их

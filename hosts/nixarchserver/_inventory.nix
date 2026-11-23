@@ -91,15 +91,12 @@ in
           pdfViewer = true;
         };
         branding = "valhallishe";
-        flows.http.port = 9200;
+        flows.http.port = 80;
+        flows.http.overlay = true;
         storage = {
-          data = onDisk "${fileStorage}/opencloud/data";
-          config = onDisk "${fileStorage}/opencloud/config";
-          files = {
-            location = "${services.opencloud.storage.data.location}/storage/users";
-            inherit (services.opencloud.storage.data) mount;
-          };
-          radicale = onDisk "${fileStorage}/radicale";
+          data.location = "${config.infra.systemStorage}/opencloud/data";
+          files = onDisk "${fileStorage}/opencloud/data/storage/users";
+          radicale.location = "${config.infra.systemStorage}/opencloud/radicale";
         };
       };
 
