@@ -16,7 +16,7 @@ rec {
     endpoint
     // {
       inherit node;
-      address = node.ip;
+      address = if endpoint.overlay then assert instance.overlayAddress != null; instance.overlayAddress else node.ip;
     };
 
   httpPorts = {

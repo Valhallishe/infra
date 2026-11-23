@@ -105,9 +105,10 @@ in
 
       vaultwarden = {
         overlayAddress = "10.1.2.6";
-        flows.http.port = 6082;
-        image = "vaultwarden/server@sha256:4fe17f415f90087377d37c755e0ea3cf189dcc6794e49cdd2a9adbb4937d9e1f";
-        storage.data.location = "/srv/docker/vaultwarden/vw-data";
+        flows.http.port = 80;
+        flows.http.overlay = true;
+        image = "docker.io/vaultwarden/server@sha256:4fe17f415f90087377d37c755e0ea3cf189dcc6794e49cdd2a9adbb4937d9e1f";
+        storage.data.location = "${config.infra.systemStorage}/vaultwarden/data";
         secretFile = ../../secrets/nixarchserver-vaultwarden.age;
       };
 

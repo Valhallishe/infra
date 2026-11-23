@@ -43,7 +43,17 @@ let
     inherit pkgs decrypt;
     instance = host.services.vaultwarden;
     public = public "vaultwarden";
-    backend = endpoints.backend (target "vaultwarden");
+    network = import ../../lib/routed-container-network.nix {
+      inherit pkgs;
+      name = "vault";
+      serviceAddress = host.services.vaultwarden.overlayAddress;
+      gatewaySources = with topology.nodes.halo; [ ip serviceHostIp ];
+      awgInterface = topology.network.interface;
+      uplinkInterface = "enp45s0";
+      linkSubnet = "169.254.252";
+      ports = [ host.services.vaultwarden.flows.http.port ];
+      httpsEgress = true;
+    };
     ssoUrl = (public "authentik").url;
   };
   immich = import ../../modules/services/immich/_arch.nix {

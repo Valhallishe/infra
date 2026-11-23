@@ -13,7 +13,7 @@ mkOption {
         overlayAddress = mkOption {
           type = types.nullOr types.str;
           default = null;
-          description = "Reserved address for the future per-service overlay; not yet applied to networking.";
+          description = "Routed service address on the infrastructure overlay.";
         };
         storage = mkOption {
           default = { };
@@ -82,6 +82,7 @@ mkOption {
                   ];
                   default = "http";
                 };
+                overlay = mkOption { type = types.bool; default = false; };
                 port = mkOption { type = types.port; };
                 proxyProtocol = mkOption {
                   type = types.enum [
