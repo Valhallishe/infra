@@ -69,8 +69,12 @@ PeerTube использует группы Authentik `PeerTube Access` для в
 этим значением. Локальная учётная запись администратора сохраняет доступ
 для обслуживания. Настройки OIDC применяются при запуске юнита, секрет
 клиента берётся из `secrets/nixarchserver-peertube.age`. Публичные URL PeerTube и
-Authentik вычисляются из маршрутов в `hosts/halo/_inventory.nix` и используются в Compose,
-проверке API и настройке OIDC.
+Authentik вычисляются из маршрутов в `hosts/halo/_inventory.nix` и используются
+в контейнерах, проверке API и настройке OIDC. PeerTube отвечает на
+`10.1.2.3:80` через AWG. PostgreSQL и Redis работают внутри pod. Служебное
+состояние хранится в `/var/lib/infra-services/peertube`, а видео и другие
+файлы в `/media/disk/peertube-podman`. Исходные тома Docker и медиакаталог
+сохранены.
 
 OpenCloud, nginx и Radicale работают в одном rootless pod. Halo обращается к
 `10.1.2.5:80` через AWG. Файлы пользователей остаются в

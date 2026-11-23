@@ -27,7 +27,18 @@ let
     inherit (host.services.peertube) secretFile adminEmail storage;
     brand = topology.branding.${host.services.peertube.branding};
     public = public "peertube";
-    backend = endpoints.backend (target "peertube");
+    home = "${topology.systemStorage}/peertube";
+    network = import ../../lib/routed-container-network.nix {
+      inherit pkgs;
+      name = "peertube";
+      serviceAddress = host.services.peertube.overlayAddress;
+      gatewaySources = with topology.nodes.halo; [ ip serviceHostIp ];
+      awgInterface = topology.network.interface;
+      uplinkInterface = "enp45s0";
+      linkSubnet = "169.254.251";
+      ports = [ host.services.peertube.flows.http.port ];
+      httpsEgress = true;
+    };
     ssoUrl = (public "authentik").url;
     proxyAddress = topology.nodes.${topology.hosts.${host.publicGateway}.node}.ip;
   };

@@ -56,13 +56,14 @@ in
       peertube = {
         overlayAddress = "10.1.2.3";
         branding = "valhallishe";
-        flows.http.port = 9001;
+        flows.http.port = 80;
+        flows.http.overlay = true;
         adminEmail = "admin@${config.infra.domain}";
         storage = {
-          files = onDisk "${fileStorage}/peertube";
-          config = dockerVolume "nixarchserver-peertube_config";
-          database = dockerVolume "nixarchserver-peertube_postgres";
-          redis = dockerVolume "nixarchserver-peertube_redis";
+          files = onDisk "${fileStorage}/peertube-podman";
+          config.location = "${config.infra.systemStorage}/peertube/config";
+          database.location = "${config.infra.systemStorage}/peertube/postgres";
+          redis.location = "${config.infra.systemStorage}/peertube/redis";
         };
         secretFile = ../../secrets/nixarchserver-peertube.age;
       };
