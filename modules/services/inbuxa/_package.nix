@@ -28,8 +28,26 @@ let
     dataDir = service.storage.project.location;
     inherit decrypt;
   };
+  themes = import ../../branding/_service-themes.nix {
+    inherit pkgs;
+    inbuxaProfile = brand;
+    authentikProfile = topology.branding.${host.services.authentik.branding};
+    nextcloudProfile = topology.branding.${host.services.nextcloud.branding};
+  };
+  theme = pkgs.runCommand "inbuxa-theme" { } ''
+    mkdir -p "$out/brand"
+    cp ${themes}/inbuxa.css "$out/inbuxa.css"
+    cp ${themes}/inbuxa-webmail.conf "$out/webmail.conf"
+    cp -rL ${themes}/inbuxa-brand/. "$out/brand/"
+    version=$(cd "$out" && sha256sum inbuxa.css webmail.conf brand/* | sha256sum | cut -c1-12)
+    sed -i "s|/_infra/theme.css|/_infra/theme.css?v=$version|; s|BRAND_VERSION|$version|" "$out/webmail.conf"
+    sed -i "s|brand-light.svg|brand-light.svg?v=$version|; s|brand-dark.svg|brand-dark.svg?v=$version|" "$out/inbuxa.css"
+  '';
   # Compose inputs are rendered together with the gateway routes.
   compose = pkgs.replaceVars ./compose.yaml.in {
+    oauthMount = builtins.toJSON "${./oauth.js}:/app/server/dist/oauth.js:ro";
+    nginxMount = builtins.toJSON "${./nginx.conf}:/etc/nginx/conf.d/default.conf:ro";
+    themeMount = builtins.toJSON "${theme}:/etc/nginx/theme:ro";
     configMount = builtins.toJSON "${service.storage.config.location}:/etc/inbuxa";
     mailMount = builtins.toJSON "${service.storage.mail.location}:/var/lib/inbuxa";
     appName = builtins.toJSON "${brand.name} Mail";

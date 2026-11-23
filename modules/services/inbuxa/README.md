@@ -1,6 +1,6 @@
 # Inbuxa
 
-Сервер и админка развёрнуты на Archserver через `/srv/docker/inbuxa/compose.yaml`.
+Сервер и админка управляются сборкой `nixarchserver` и Comin.
 Сервер и релей зафиксированы на 27.1-rc.5. Служба `infra-inbuxa.service`
 запускает compose после Docker и туннеля, чтобы адрес 10.1.0.2 уже существовал. Данные и настройки сервера хранятся
 в `/srv/docker/inbuxa/{data,config}`; их необходимо включить в резервное копирование.
@@ -18,17 +18,14 @@ HAProxy на Halo завершает TLS для `mail.valhallishe.net` и
 Его состояние и очередь в `/var/lib/inbuxa-relay` необходимо резервировать;
 персональные ключи релея также хранятся в данных сервера.
 
-Изменения NixOS должны попасть в ветку main репозитория Comin: иначе следующее
-применение Comin может отменить маршруты и службу. Настройки Archserver
-применяются отдельно. Соберите комплект командой
-`nix build .#inbuxa-config --no-link --print-out-paths` и установите
-`compose.yaml`, `nginx.conf` и `oauth.js` в `/srv/docker/inbuxa`.
-Файл `infra-inbuxa.service` предназначен для `/etc/systemd/system/`.
-После обновления Compose примените его в рабочем каталоге через
-`docker compose up -d --no-build --pull never`. После изменения примонтированных
-файлов пересоздайте контейнеры `proxy` и `webmail`. Публичные URL и OIDC issuer
-берутся из маршрутов в `hosts/halo/_inventory.nix`. Для проверки `sudo systemctl status inbuxa-relay` и
-`sudo -u inbuxa-relay /opt/inbuxa-relay/bin/inbuxa-relay status` на Halo.
+Compose, nginx, OAuth и тема формируются Nix и применяются Comin на
+Archserver. При первом переключении существующий `infra-inbuxa.service`
+передаётся под управление Nix, если его содержимое совпадает с прежней
+сгенерированной версией. Используются существующий Compose-проект
+`infra-inbuxa` и каталоги данных. Публичные URL и OIDC issuer берутся из
+маршрутов в `hosts/halo/_inventory.nix`.
+
+Для проверки релея на Halo используйте `systemctl status inbuxa-relay`.
 
 DKIM-ключи сгенерированы сервером. При ручном DNS необходимо опубликовать оба
 ключа из `dnsZoneFile` домена в админке и следить за ротацией ключей. Сертификат

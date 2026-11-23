@@ -213,12 +213,11 @@ Archserver: Nextcloud AIO на 6084, Immich на 2283.
 ## Темы сервисов
 
 Halo подключает Stylix с профилем из `modules/branding/`. Authentik применяет
-профиль из своей декларации при запуске. Темы Inbuxa и Nextcloud можно
-применить отдельно на Archserver:
+профиль из своей декларации при запуске. Тема Inbuxa применяется вместе с
+сервисом через Comin. Тему Nextcloud можно применить отдельно на Archserver:
 
 ```sh
 export SERVICE_THEMES=$(nix build .#service-themes --no-link --print-out-paths)
-./modules/services/inbuxa/deploy-theme.sh archserver
 ssh archserver 'bash -s' < "$SERVICE_THEMES/nextcloud.sh"
 ```
 

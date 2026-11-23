@@ -65,7 +65,6 @@ in
         secretFile = ../../secrets/nixarchserver-peertube.age;
       };
 
-      # Inbuxa is applied separately using the configuration built by Nix.
       inbuxa = {
         branding = "valhallishe";
         storage = {

@@ -46,6 +46,40 @@ let
     backend = endpoints.backend (target "vaultwarden");
     ssoUrl = (public "authentik").url;
   };
+  inbuxaConfig = import ../../modules/services/inbuxa/_package.nix {
+    inherit pkgs endpoints topology;
+    hostname = "nixarchserver";
+  };
+  inbuxaUnit = pkgs.writeTextDir "infra-inbuxa.service" ''
+    [Unit]
+    Description=Inbuxa containers
+    Requires=docker.service
+    Wants=nixarchserver-awg.service
+    After=docker.service nixarchserver-awg.service
+    RequiresMountsFor=${host.services.inbuxa.storage.config.location} ${host.services.inbuxa.storage.mail.location}
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    WorkingDirectory=${host.services.inbuxa.storage.project.location}
+    RuntimeDirectory=infra-inbuxa
+    RuntimeDirectoryMode=0700
+    ExecStartPre=${inbuxaPrepare} %t/infra-inbuxa
+    ExecStart=/usr/bin/docker compose --project-name infra-inbuxa --project-directory ${host.services.inbuxa.storage.project.location} -f ${inbuxaConfig}/compose.yaml up -d --no-build --pull never
+    ExecStop=/usr/bin/docker compose --project-name infra-inbuxa --project-directory ${host.services.inbuxa.storage.project.location} -f ${inbuxaConfig}/compose.yaml stop
+    TimeoutStartSec=120
+
+    [Install]
+    WantedBy=multi-user.target
+  '';
+  inbuxaPrepare = pkgs.writeShellScript "inbuxa-prepare" ''
+    set -euo pipefail
+    umask 077
+    test -d ${lib.escapeShellArg host.services.inbuxa.storage.config.location}
+    test -d ${lib.escapeShellArg host.services.inbuxa.storage.mail.location}
+    ${decrypt ../../secrets/nixarchserver-inbuxa.age} > "$1/webmail-secrets.env"
+    test -s "$1/webmail-secrets.env"
+  '';
   inherit (topology.network) interface;
   awg = import ../../modules/awg/_arch.nix {
     inherit pkgs decrypt;
@@ -99,6 +133,12 @@ let
       source = vaultwarden.unit;
     }
   ]
+  ++ lib.optionals (host.services.inbuxa != null) [
+    {
+      name = "infra-inbuxa.service";
+      source = inbuxaUnit;
+    }
+  ]
   ++ lib.optionals (host.services.comin != null) [
     {
       name = "comin.service";
@@ -115,12 +155,15 @@ let
     export PATH=/usr/bin
     umask 077
     directory=$(mktemp -d /run/nixarchserver-check.XXXXXXXX)
-    trap 'unlink "$directory/vaultwarden.env" 2>/dev/null || :; unlink "$directory/authentik.env" 2>/dev/null || :; unlink "$directory/${interface}.conf" 2>/dev/null || :; rmdir "$directory"' EXIT
+    trap 'unlink "$directory/webmail-secrets.env" 2>/dev/null || :; unlink "$directory/vaultwarden.env" 2>/dev/null || :; unlink "$directory/authentik.env" 2>/dev/null || :; unlink "$directory/${interface}.conf" 2>/dev/null || :; rmdir "$directory"' EXIT
     ${lib.optionalString (host.services.authentik != null) ''
       ${authentik.command} check "$directory"
     ''}
     ${lib.optionalString (host.services.vaultwarden != null) ''
       ${vaultwarden.prepare} "$directory"
+    ''}
+    ${lib.optionalString (host.services.inbuxa != null) ''
+      ${inbuxaPrepare} "$directory"
     ''}
     ${awg.prepare} "$directory"
     /usr/bin/awg-quick strip "$directory/${interface}.conf" >/dev/null
@@ -145,6 +188,9 @@ let
     units=(${unitNames units})
     for unit in "''${units[@]}"; do
       path="$directory/$unit"
+      if [[ $unit = infra-inbuxa.service && -f $path && ! -L $path ]] && cmp -s "$path" ${inbuxaConfig}/infra-inbuxa.service; then
+        continue
+      fi
       if [[ -e $path && $(readlink "$path" || :) != /nix/store/*/"$unit" ]]; then
         echo "Refusing to replace existing $path" >&2
         exit 1
