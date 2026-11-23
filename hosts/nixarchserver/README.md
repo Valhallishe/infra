@@ -89,19 +89,25 @@ PDF, 3D Viewer и Unzip включаются независимо. Версии 
 приложение OpenCloud и появляются для файлов с соответствующими метаданными;
 отдельных переключателей для них OpenCloud не предоставляет.
 
-Vaultwarden на `https://pass.valhallishe.net` управляется юнитом
-`nixarchserver-vaultwarden.service`. При первом переключении Compose
-пересоздаёт контейнер в существующем проекте `vaultwarden` с той же версией
-образа. База SQLite, вложения и настройки из панели администратора остаются
-в `/srv/docker/vaultwarden/vw-data`. Перед переносом сохраните этот каталог
-целиком при остановленном контейнере. Для возврата к прежней конфигурации
-отключите новый юнит и запустите исходный Compose из `/srv/docker/vaultwarden`.
+Vaultwarden на `https://pass.valhallishe.net` работает в rootless Podman
+под управлением `nixarchserver-vaultwarden.service`. Halo обращается напрямую
+к `10.1.2.6:80` через AWG. База SQLite, вложения и настройки хранятся в
+`/var/lib/infra-services/vaultwarden/data`. Исходный каталог
+`/srv/docker/vaultwarden/vw-data` сохранён в состоянии на момент переключения.
+Перед возвратом к Docker нужно остановить запись и перенести актуальные данные.
 
 URL Vaultwarden и Authentik берутся из маршрутов Halo. Секрет клиента SSO,
 токен администратора и ключи push хранятся в
 `secrets/nixarchserver-vaultwarden.age`. Юнит расшифровывает их в
 `/run/nixarchserver-vaultwarden`. Vaultwarden использует сохранённый
 `config.json` для параметров, заданных через панель администратора.
+
+Immich на `https://photos.valhallishe.net` работает в отдельном rootless pod.
+Halo обращается к `10.1.2.7:80` через AWG. PostgreSQL, Valkey и ML доступны
+внутри pod. Медиатека остаётся в `/media/disk/immich`, а база, данные Valkey
+и кеш моделей хранятся в `/var/lib/infra-services/immich`. Контейнерный
+пользователь получает доступ к медиатеке через ACL. Исходные база и тома
+Docker сохранены в состоянии на момент переключения.
 
 Изоляция сети контейнеров на Archserver задаётся правилами
 [`container-isolation.nft`](../../archserver/container-isolation.nft), которые

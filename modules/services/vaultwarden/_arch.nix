@@ -9,7 +9,7 @@ let
     inherit pkgs home uid runtime;
     name = "vaultwarden";
     subId = 265536;
-    registryRepository = builtins.head (lib.splitString "@" instance.image);
+    registryRepositories = [ (builtins.head (lib.splitString "@" instance.image)) ];
   };
   environment = {
         DOMAIN = public.url;

@@ -59,7 +59,17 @@ let
   immich = import ../../modules/services/immich/_arch.nix {
     inherit pkgs decrypt;
     instance = host.services.immich;
-    backend = endpoints.backend (target "immich");
+    network = import ../../lib/routed-container-network.nix {
+      inherit pkgs;
+      name = "immich";
+      serviceAddress = host.services.immich.overlayAddress;
+      gatewaySources = with topology.nodes.halo; [ ip serviceHostIp ];
+      awgInterface = topology.network.interface;
+      uplinkInterface = "enp45s0";
+      linkSubnet = "169.254.253";
+      ports = [ host.services.immich.flows.http.port ];
+      httpsEgress = true;
+    };
   };
   inbuxaConfig = import ../../modules/services/inbuxa/_package.nix {
     inherit pkgs endpoints topology;

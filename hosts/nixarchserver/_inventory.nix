@@ -114,12 +114,14 @@ in
 
       immich = {
         overlayAddress = "10.1.2.7";
-        flows.http.port = 2283;
+        flows.http.port = 80;
+        flows.http.overlay = true;
         storage = {
           project.location = "/srv/docker/immich";
           library = onDisk "${fileStorage}/immich";
-          database.location = "${services.immich.storage.project.location}/postgres";
-          modelCache = dockerVolume "immich_model-cache";
+          database.location = "${config.infra.systemStorage}/immich/postgres";
+          modelCache.location = "${config.infra.systemStorage}/immich/model-cache";
+          redis.location = "${config.infra.systemStorage}/immich/redis";
         };
         secretFile = ../../secrets/nixarchserver-immich.age;
       };

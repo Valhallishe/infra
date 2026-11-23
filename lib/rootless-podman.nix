@@ -1,9 +1,9 @@
-{ pkgs, name, uid, subId, home, runtime, registryRepository }:
+{ pkgs, name, uid, subId, home, runtime, registryRepositories }:
 let
   account = "oci-${name}";
   policy = pkgs.writeText "podman-pinned-image-policy.json" (builtins.toJSON {
     default = [{ type = "reject"; }];
-    transports.docker.${registryRepository} = [{ type = "insecureAcceptAnything"; }];
+    transports.docker = pkgs.lib.genAttrs registryRepositories (_: [{ type = "insecureAcceptAnything"; }]);
   });
   setup = pkgs.writeShellScript "${name}-podman-account" ''
     set -euo pipefail
