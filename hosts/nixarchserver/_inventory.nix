@@ -39,6 +39,7 @@ in
       };
 
       authentik = {
+        overlayAddress = "10.1.2.2";
         branding = "valhallishe";
         flows.http.port = 5680;
         httpsPort = 56443;
@@ -53,6 +54,7 @@ in
       };
 
       peertube = {
+        overlayAddress = "10.1.2.3";
         branding = "valhallishe";
         flows.http.port = 9001;
         adminEmail = "admin@${config.infra.domain}";
@@ -66,6 +68,7 @@ in
       };
 
       inbuxa = {
+        overlayAddress = "10.1.2.4";
         branding = "valhallishe";
         storage = {
           project.location = "/srv/docker/inbuxa";
@@ -80,6 +83,7 @@ in
       };
 
       opencloud = {
+        overlayAddress = "10.1.2.5";
         apps = {
           model3d = true;
           unzip = true;
@@ -100,6 +104,7 @@ in
       };
 
       vaultwarden = {
+        overlayAddress = "10.1.2.6";
         flows.http.port = 6082;
         image = "vaultwarden/server@sha256:4fe17f415f90087377d37c755e0ea3cf189dcc6794e49cdd2a9adbb4937d9e1f";
         storage.data.location = "/srv/docker/vaultwarden/vw-data";
@@ -107,6 +112,7 @@ in
       };
 
       immich = {
+        overlayAddress = "10.1.2.7";
         flows.http.port = 2283;
         storage = {
           project.location = "/srv/docker/immich";
@@ -126,6 +132,7 @@ in
         };
       };
       minecraft = {
+        overlayAddress = "10.1.2.8";
         storage.worlds.kind = "external";
         flows = {
           tcp = {

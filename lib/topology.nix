@@ -89,6 +89,18 @@ let
           type = lib.types.str;
           default = ipv4.address infraConfig.infra.network.subnet config.hostId;
         };
+        serviceSubnet = lib.mkOption {
+          type = lib.types.str;
+          readOnly = true;
+          default = "${ipv4.address infraConfig.infra.network.subnet (config.hostId * 256)}/24";
+          description = "Reserved /24 for this host and its services.";
+        };
+        serviceHostIp = lib.mkOption {
+          type = lib.types.str;
+          readOnly = true;
+          default = ipv4.address config.serviceSubnet 1;
+          description = "Reserved host address in the service subnet.";
+        };
         awg = {
           publicKey = lib.mkOption {
             type = lib.types.path;
@@ -136,6 +148,11 @@ in
           H4 = 52194024;
         };
       };
+    };
+    systemStorage = mkOption {
+      type = types.strMatching "/.*";
+      default = "/var/lib/infra-services";
+      description = "Reserved root for service system data on the main disk.";
     };
     fileStorage = mkOption {
       type = types.strMatching "/.*";

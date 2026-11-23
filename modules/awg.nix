@@ -86,6 +86,22 @@ delib.module {
             '') peers
           );
         };
+        systemd.services.infra-awg-service-addresses = {
+          description = "Add service subnet routes to the AWG overlay";
+          wantedBy = [ "multi-user.target" "wireguard-${interface}.service" ];
+          requires = [ "wireguard-${interface}.service" ];
+          after = [ "wireguard-${interface}.service" ];
+          partOf = [ "wireguard-${interface}.service" ];
+          path = [ pkgs.iproute2 pkgs.amneziawg-tools ];
+          serviceConfig = { Type = "oneshot"; RemainAfterExit = true; };
+          script = ''
+            ip address replace ${lib.escapeShellArg "${node.serviceHostIp}/32"} dev ${lib.escapeShellArg interface}
+            ${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: peer: ''
+              awg set ${lib.escapeShellArg interface} peer "$(cat ${lib.escapeShellArg config.age.secrets.${secretName name}.path})" allowed-ips ${lib.escapeShellArg "${peer.ip}/32,${peer.serviceSubnet}"}
+              ip route replace ${lib.escapeShellArg peer.serviceSubnet} dev ${lib.escapeShellArg interface}
+            '') peers)}
+          '';
+        };
         systemd.services."wireguard-${interface}".restartTriggers = [
           node.awg.privateKey
         ]

@@ -127,6 +127,10 @@ let
   '';
   units = [
     {
+      name = "nixarchserver-awg-service-addresses.service";
+      source = awg.serviceAddressesUnit;
+    }
+    {
       name = "nixarchserver-container-firewall.service";
       source = containerFirewallUnit;
     }
@@ -253,6 +257,8 @@ let
     ${lib.concatMapStringsSep "\n" (unit: ''
       ln -sfn "../${unit.name}" "$directory/${targetOf unit}.wants/${unit.name}"
     '') enableUnits}
+    install -d "$directory/nixarchserver-awg.service.wants"
+    ln -sfn ../nixarchserver-awg-service-addresses.service "$directory/nixarchserver-awg.service.wants/nixarchserver-awg-service-addresses.service"
     install -d "$directory/docker.service.requires"
     ln -sfn ../nixarchserver-container-firewall.service "$directory/docker.service.requires/nixarchserver-container-firewall.service"
     systemctl daemon-reload

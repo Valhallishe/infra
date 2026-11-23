@@ -24,10 +24,12 @@ in
         storage.state.location = "/var/lib/comin";
       };
       inbuxaRelay = {
+        overlayAddress = "10.1.1.2";
         linkPort = 10443;
         storage.state.location = "/var/lib/inbuxa-relay";
       };
       autopush = {
+        overlayAddress = "10.1.1.3";
         flows = {
           connect.port = 8280;
           endpoint.port = 8282;

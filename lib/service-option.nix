@@ -10,6 +10,11 @@ mkOption {
   type = types.nullOr (
     types.submodule {
       options = {
+        overlayAddress = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "Reserved address for the future per-service overlay; not yet applied to networking.";
+        };
         storage = mkOption {
           default = { };
           description = "Named persistent storage areas for the service.";

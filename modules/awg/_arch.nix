@@ -53,6 +53,27 @@ let
 in
 {
   inherit prepare;
+  serviceAddressesUnit = pkgs.writeTextDir "nixarchserver-awg-service-addresses.service" ''
+    [Unit]
+    Description=Add service subnet routes to the AWG overlay
+    Requires=nixarchserver-awg.service
+    After=nixarchserver-awg.service
+    PartOf=nixarchserver-awg.service
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=${pkgs.writeShellScript "archserver-awg-service-addresses" ''
+      set -euo pipefail
+      /usr/bin/ip address replace ${node.serviceHostIp}/32 dev ${network.interface}
+      public=$(${decrypt peer.awg.publicKey})
+      /usr/bin/awg set ${network.interface} peer "$public" allowed-ips ${peer.ip}/32,${peer.serviceSubnet}
+      /usr/bin/ip route replace ${peer.serviceSubnet} dev ${network.interface}
+    ''}
+
+    [Install]
+    WantedBy=multi-user.target
+  '';
   unit = pkgs.writeTextDir "nixarchserver-awg.service" ''
     [Unit]
     Description=AmneziaWG ${network.interface} (nixarchserver)
