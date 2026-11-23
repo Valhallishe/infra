@@ -6,9 +6,19 @@ let
     url = "https://raw.githubusercontent.com/kja999/opencloud-radicale-web-apps/3257f2ded2cef102a02b6680f57ef126eb8a34ee/web-app-radicale.tar.gz";
     hash = "sha256-SZcAkgnZRte3fSGtAhBXgLRfzYis4h8eLY7RHKr1CDU=";
   };
-  apps = pkgs.runCommand "opencloud-apps" { } ''
+  model3d = pkgs.fetchurl {
+    url = "https://github.com/LetsDrinkSomeTea/opencloud-3dviewer/releases/download/v1.1.0-20260723-124242/3dviewer.zip";
+    hash = "sha256-Uop9qOwBRdeDAZhXst5r98HQzRIQpbQ3xaN/cLO2i7w=";
+  };
+  unzipApp = pkgs.fetchurl {
+    url = "https://github.com/opencloud-eu/web-extensions/releases/download/unzip-v2.2.3/unzip-2.2.3.zip";
+    hash = "sha256-l9fzZTKUVLOle6OoiSJvko3X+082Hp4Ir8LOvMzGZOs=";
+  };
+  apps = pkgs.runCommand "opencloud-apps" { nativeBuildInputs = [ pkgs.unzip ]; } ''
     mkdir -p "$out/web-app-radicale"
     tar xzf ${pluginTar} -C "$out/web-app-radicale" --no-xattrs
+    ${lib.optionalString instance.apps.model3d "unzip -q ${model3d} -d $out"}
+    ${lib.optionalString instance.apps.unzip "unzip -q ${unzipApp} -d $out"}
   '';
   wordmark = color: pkgs.writeText "opencloud-logo.svg" (lib.replaceStrings
     [ "#ffab65" "0 0 600 295" ''x="203" y="0" width="194" height="192"'' ''x="300" y="265" text-anchor="middle"'' ''font-size="47"'' ''letter-spacing="7"'' ]
@@ -144,6 +154,7 @@ let
           GRAPH_USERNAME_MATCH = "none";
           OC_OIDC_CLIENT_ID = "valhallishe-opencloud";
           WEB_OIDC_CLIENT_ID = "valhallishe-opencloud";
+          WEB_UI_CORE_APPS = lib.concatStringsSep "," ([ "files" "search" "text-editor" "external" "admin-settings" "preview" "app-store" "rclone-crypt" ] ++ lib.optional instance.apps.pdfViewer "pdf-viewer" ++ lib.optional instance.apps.epubReader "epub-reader");
           WEB_OPTION_DISABLE_SPONSOR_LINK = "true";
           WEBFINGER_WEB_OIDC_CLIENT_ID = "valhallishe-opencloud";
           WEBFINGER_DESKTOP_OIDC_CLIENT_ID = "valhallishe-opencloud";

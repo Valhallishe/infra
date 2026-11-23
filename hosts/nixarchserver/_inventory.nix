@@ -43,6 +43,7 @@
       };
 
       opencloud = {
+        apps = { model3d = true; unzip = true; epubReader = true; pdfViewer = true; };
         branding = "valhallishe";
         flows.http.port = 9200;
         storage = "/media/disk/opencloud";
