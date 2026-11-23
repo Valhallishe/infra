@@ -1,4 +1,4 @@
-{ pkgs, name, serviceAddress, gatewaySources, awgInterface, uplinkInterface, linkSubnet, ports, httpsEgress ? false }:
+{ pkgs, name, serviceAddress, gatewaySources, awgInterface, uplinkInterface, linkSubnet, ports, httpsEgress ? false, tcpToAwgPeers ? [ ] }:
 let
   inherit (pkgs) lib;
   hostIf = "svc-${name}";
@@ -21,7 +21,10 @@ let
         iifname "${hostIf}" ip saddr != ${serviceAddress} counter drop
         iifname "${hostIf}" ct state established,related accept
         iifname "${uplinkInterface}" oifname "${hostIf}" ip daddr ${serviceAddress} ct state established,related accept
-        iifname "${awgInterface}" oifname "${hostIf}" ip saddr { ${sources} } ip daddr ${serviceAddress} tcp dport { ${portSet} } accept
+        iifname "${awgInterface}" oifname "${hostIf}" ip saddr { ${sources} } ip daddr ${serviceAddress} tcp dport { ${portSet} } accept${lib.concatMapStrings (peer:
+          "\n        iifname \"${hostIf}\" oifname \"${awgInterface}\" ip daddr ${peer.address} tcp dport ${toString peer.port} accept"
+          + "\n        iifname \"${awgInterface}\" oifname \"${hostIf}\" ip saddr ${peer.address} ip daddr ${serviceAddress} ct state established,related accept"
+        ) tcpToAwgPeers}
         ${lib.optionalString httpsEgress ''
         iifname "${hostIf}" ip daddr { 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16 } drop
         iifname "${hostIf}" oifname "${uplinkInterface}" tcp dport 443 accept

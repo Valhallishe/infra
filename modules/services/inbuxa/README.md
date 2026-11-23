@@ -1,9 +1,11 @@
 # Inbuxa
 
-Сервер и админка управляются сборкой `nixarchserver` и Comin.
-Сервер и релей зафиксированы на 27.1-rc.5. Служба `infra-inbuxa.service`
-запускает compose после Docker и туннеля, чтобы адрес 10.1.0.2 уже существовал. Данные и настройки сервера хранятся
-в `/srv/docker/inbuxa/{data,config}`; их необходимо включить в резервное копирование.
+Сервер, веб-почта, nginx и админка работают в rootless Podman под
+управлением `infra-inbuxa.service` и Comin. Halo обращается к
+`10.1.2.4:80` и `10.1.2.4:8081` через AWG. Почта хранится в
+`/media/disk/inbuxa`, конфигурация находится в
+`/var/lib/infra-services/inbuxa/config`. Исходные каталоги в
+`/srv/docker/inbuxa` сохранены на момент переключения.
 Секреты веб-почты зашифрованы в `secrets/nixarchserver-inbuxa.age` и
 расшифровываются SSH-ключом хоста в `/run/infra-inbuxa` при запуске юнита.
 Учётные данные первоначальной настройки сохранены отдельно в зашифрованном
@@ -18,12 +20,8 @@ HAProxy на Halo завершает TLS для `mail.valhallishe.net` и
 Его состояние и очередь в `/var/lib/inbuxa-relay` необходимо резервировать;
 персональные ключи релея также хранятся в данных сервера.
 
-Compose, nginx, OAuth и тема формируются Nix и применяются Comin на
-Archserver. При первом переключении существующий `infra-inbuxa.service`
-передаётся под управление Nix, если его содержимое совпадает с прежней
-сгенерированной версией. Используются существующий Compose-проект
-`infra-inbuxa` и каталоги данных. Публичные URL и OIDC issuer берутся из
-маршрутов в `hosts/halo/_inventory.nix`.
+Nix формирует конфигурацию nginx, OAuth и тему. Публичные URL и адрес
+OIDC issuer берутся из маршрутов в `hosts/halo/_inventory.nix`.
 
 Для проверки релея на Halo используйте `systemctl status inbuxa-relay`.
 
@@ -37,4 +35,4 @@ SPF по SMTP HELO опубликуйте в зоне `valhallishe.net` отде
 можно командой `dig +short TXT mail.valhallishe.net`.
 
 Authentik выполняет вход в веб-почту через OIDC и создаёт ящики через SCIM.
-Провайдер SCIM обращается к Inbuxa по адресу `http://10.1.0.2:18083/scim/v2`.
+Провайдер SCIM обращается к Inbuxa по адресу `https://mail.valhallishe.net/scim/v2`.

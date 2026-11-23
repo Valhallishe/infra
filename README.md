@@ -223,7 +223,7 @@ export SERVICE_THEMES=$(nix build .#service-themes --no-link --print-out-paths)
 ssh archserver 'bash -s' < "$SERVICE_THEMES/nextcloud.sh"
 ```
 
-Файлы Compose и nginx для Inbuxa собираются через `nix build .#inbuxa-config`.
+Артефакты nginx, OAuth и темы для Inbuxa собираются через `nix build .#inbuxa-config`.
 Порядок обновления описан в [документации Inbuxa](modules/services/inbuxa/README.md).
 Authentik получает CSS вместе с текущими логотипом и фоном, inbuxa загружает
 CSS в webmail, Nextcloud получает основной цвет и цвет фона через OCC.

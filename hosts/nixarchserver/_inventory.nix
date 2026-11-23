@@ -73,14 +73,13 @@ in
         overlayAddress = "10.1.2.4";
         branding = "valhallishe";
         storage = {
-          project.location = "/srv/docker/inbuxa";
-          config.location = "${services.inbuxa.storage.project.location}/config";
-          mail.location = "${services.inbuxa.storage.project.location}/data";
+          config.location = "${config.infra.systemStorage}/inbuxa/config";
+          mail = onDisk "${fileStorage}/inbuxa";
         };
         flows = {
-          webmail.port = 18084;
-          admin.port = 18081;
-          scim.port = 18083;
+          webmail = { port = 80; overlay = true; };
+          admin = { port = 8081; overlay = true; };
+          scim = { port = 80; overlay = true; };
         };
       };
 

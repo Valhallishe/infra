@@ -112,36 +112,33 @@ let
     inherit pkgs endpoints topology;
     hostname = "nixarchserver";
   };
-  inbuxaUnit = pkgs.writeTextDir "infra-inbuxa.service" ''
-    [Unit]
-    Description=Inbuxa containers
-    Requires=docker.service
-    Wants=nixarchserver-awg.service
-    After=docker.service nixarchserver-awg.service
-    RequiresMountsFor=${host.services.inbuxa.storage.config.location} ${host.services.inbuxa.storage.mail.location}
-
-    [Service]
-    Type=oneshot
-    RemainAfterExit=yes
-    WorkingDirectory=${host.services.inbuxa.storage.project.location}
-    RuntimeDirectory=infra-inbuxa
-    RuntimeDirectoryMode=0700
-    ExecStartPre=${inbuxaPrepare} %t/infra-inbuxa
-    ExecStart=/usr/bin/docker compose --project-name infra-inbuxa --project-directory ${host.services.inbuxa.storage.project.location} -f ${inbuxaConfig}/compose.yaml up -d --no-build --pull never
-    ExecStop=/usr/bin/docker compose --project-name infra-inbuxa --project-directory ${host.services.inbuxa.storage.project.location} -f ${inbuxaConfig}/compose.yaml stop
-    TimeoutStartSec=120
-
-    [Install]
-    WantedBy=multi-user.target
-  '';
-  inbuxaPrepare = pkgs.writeShellScript "inbuxa-prepare" ''
-    set -euo pipefail
-    umask 077
-    test -d ${lib.escapeShellArg host.services.inbuxa.storage.config.location}
-    test -d ${lib.escapeShellArg host.services.inbuxa.storage.mail.location}
-    ${decrypt ../../secrets/nixarchserver-inbuxa.age} > "$1/webmail-secrets.env"
-    test -s "$1/webmail-secrets.env"
-  '';
+  inbuxa = import ../../modules/services/inbuxa/_arch.nix {
+    inherit pkgs decrypt;
+    instance = host.services.inbuxa;
+    configPackage = inbuxaConfig;
+    home = "${topology.systemStorage}/inbuxa";
+    public = {
+      webmail = endpoints.public host.publicGateway { host = "nixarchserver"; service = "inbuxa"; flow = "webmail"; };
+      admin = endpoints.public host.publicGateway { host = "nixarchserver"; service = "inbuxa"; flow = "admin"; };
+      brand = topology.branding.${host.services.inbuxa.branding};
+    };
+    ssoUrl = (public "authentik").url;
+    network = import ../../lib/routed-container-network.nix {
+      inherit pkgs;
+      name = "inbuxa";
+      serviceAddress = host.services.inbuxa.overlayAddress;
+      gatewaySources = with topology.nodes.halo; [ ip serviceHostIp ];
+      awgInterface = topology.network.interface;
+      uplinkInterface = "enp45s0";
+      linkSubnet = "169.254.249";
+      ports = with host.services.inbuxa.flows; [ webmail.port admin.port ];
+      httpsEgress = true;
+      tcpToAwgPeers = [{
+        address = topology.nodes.halo.ip;
+        port = topology.hosts.halo.services.inbuxaRelay.linkPort;
+      }];
+    };
+  };
   inherit (topology.network) interface;
   awg = import ../../modules/awg/_arch.nix {
     inherit pkgs decrypt;
@@ -239,7 +236,7 @@ let
   ++ lib.optionals (host.services.inbuxa != null) [
     {
       name = "infra-inbuxa.service";
-      source = inbuxaUnit;
+      source = inbuxa.unit;
     }
   ]
   ++ lib.optionals (host.services.comin != null) [
@@ -266,7 +263,7 @@ let
       ${vaultwarden.prepare} "$directory"
     ''}
     ${lib.optionalString (host.services.inbuxa != null) ''
-      ${inbuxaPrepare} "$directory"
+      ${inbuxa.prepare} "$directory"
     ''}
     ${lib.optionalString (host.services.immich != null) ''
       ${immich.prepare} "$directory"
@@ -294,9 +291,6 @@ let
     units=(${unitNames units})
     for unit in "''${units[@]}"; do
       path="$directory/$unit"
-      if [[ $unit = infra-inbuxa.service && -f $path && ! -L $path ]] && cmp -s "$path" ${inbuxaConfig}/infra-inbuxa.service; then
-        continue
-      fi
       if [[ -e $path && $(readlink "$path" || :) != /nix/store/*/"$unit" ]]; then
         echo "Refusing to replace existing $path" >&2
         exit 1
