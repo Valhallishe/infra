@@ -22,8 +22,8 @@ let
   quota = 50 * 1024 * 1024 * 1024;
   accessSettings = pkgs.writeText "peertube-access.json" (
     builtins.toJSON {
-      accessGroup = "PeerTube Access";
-      publishGroup = "PeerTube Publishers";
+      accessGroup = "peertube-access";
+      publishGroup = "peertube-publishers";
       snapshotLifetime = 120;
       displayName = "${brand.name} Videos";
       redirectUri = "${public.url}/plugins/auth-openid-connect/router/code-cb";

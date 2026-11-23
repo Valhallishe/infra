@@ -1,4 +1,4 @@
-{ pkgs, decrypt, instance, branding, network, home, scimUrl }:
+{ pkgs, decrypt, instance, branding, network, home, scimUrl, mailDomain }:
 let
   inherit (pkgs) lib;
   inherit (instance) storage secretFile;
@@ -91,6 +91,10 @@ let
         provider.url = url
         provider.save(update_fields=["url"])
   '';
+  enrollment = pkgs.writeText "authentik-enrollment.py" ''
+    MAIL_DOMAIN = ${builtins.toJSON mailDomain}
+    ${builtins.readFile ./enrollment.py}
+  '';
   connect = pkgs.writeShellScript "authentik-connect" ''
     set -euo pipefail
     export PATH=/usr/bin
@@ -103,6 +107,8 @@ let
          podman exec authentik-worker ak healthcheck >/dev/null 2>&1; then
         podman exec authentik-server ak shell -c 'import runpy; runpy.run_path("/opt/infra-branding/apply.py")'
         ${execWorker} < ${scim}
+        ${execWorker} < ${enrollment}
+        ${execWorker} < ${./devops-access.py}
         exit 0
       fi
       sleep 1

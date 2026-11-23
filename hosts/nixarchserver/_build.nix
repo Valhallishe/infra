@@ -14,9 +14,29 @@ let
     flow = "http";
   };
   public = service: endpoints.public host.publicGateway (target service);
+  vpnPortal = import ../../modules/services/vpn-portal/_arch.nix {
+    inherit pkgs;
+    public = public "vpn-portal";
+    ssoUrl = (public "authentik").url;
+    home = host.services.vpn-portal.storage.data.location;
+    execAuthentik = authentik.execWorker;
+    network = import ../../lib/routed-container-network.nix {
+      inherit pkgs;
+      name = "vpn";
+      serviceAddress = host.services.vpn-portal.overlayAddress;
+      gatewaySources = with topology.nodes.halo; [ ip serviceHostIp ];
+      awgInterface = topology.network.interface;
+      uplinkInterface = "enp45s0";
+      linkSubnet = "169.254.248";
+      ports = [ host.services.vpn-portal.flows.http.port ];
+      hostTcpPorts = [ 13001 ];
+      httpsEgress = true;
+    };
+  };
   authentik = import ../../modules/services/authentik/_arch.nix {
     inherit pkgs decrypt;
     instance = host.services.authentik;
+    mailDomain = topology.domain;
     home = "${topology.systemStorage}/authentik";
     scimUrl = (endpoints.public host.publicGateway { host = "nixarchserver"; service = "inbuxa"; flow = "webmail"; }).url + "/scim/v2";
     network = import ../../lib/routed-container-network.nix {
@@ -198,6 +218,10 @@ let
       name = "nixarchserver-authentik.service";
       source = authentik.unit;
     }
+  ]
+  ++ lib.optionals (host.services.vpn-portal != null) [
+    { name = "nixarchserver-vpn-portal.service"; source = vpnPortal.unit; }
+    { name = "nixarchserver-vpn-api-relay.service"; source = vpnPortal.relayUnit; }
   ]
   ++ lib.optionals (host.services.peertube != null) [
     {

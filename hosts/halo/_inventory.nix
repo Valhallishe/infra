@@ -42,6 +42,7 @@ in
     };
     gateway.routes = [
       (toArch "sso" "authentik" "http")
+      (toArch "account" "vpn-portal" "http")
       (toArch "videos" "peertube" "http")
       (toArch "photos" "immich" "http")
       (toArch "files" "opencloud" "http")

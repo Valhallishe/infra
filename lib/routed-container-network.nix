@@ -1,4 +1,4 @@
-{ pkgs, name, serviceAddress, gatewaySources, awgInterface, uplinkInterface, linkSubnet, ports, httpsEgress ? false, tcpToAwgPeers ? [ ] }:
+{ pkgs, name, serviceAddress, gatewaySources, awgInterface, uplinkInterface, linkSubnet, ports, httpsEgress ? false, tcpToAwgPeers ? [ ], hostTcpPorts ? [ ] }:
 let
   inherit (pkgs) lib;
   hostIf = "svc-${name}";
@@ -6,15 +6,19 @@ let
   table = "svc_${name}";
   portSet = lib.concatMapStringsSep ", " toString ports;
   sources = lib.concatStringsSep ", " gatewaySources;
+  allowHost = lib.concatMapStringsSep "\n" (port: "iptables -I INPUT 1 -i ${hostIf} -s ${serviceAddress} -d ${linkSubnet}.1 -p tcp --dport ${toString port} -j ACCEPT") hostTcpPorts;
+  revokeHost = lib.concatMapStringsSep "\n" (port: "iptables -D INPUT -i ${hostIf} -s ${serviceAddress} -d ${linkSubnet}.1 -p tcp --dport ${toString port} -j ACCEPT 2>/dev/null || :") hostTcpPorts;
   rules = pkgs.writeText "${name}-routed-nftables.conf" ''
     table inet ${table} {
       chain input {
         type filter hook input priority -30; policy accept;
-        iifname "${hostIf}" counter drop
+        ${lib.optionalString (hostTcpPorts != [ ]) ''iifname "${hostIf}" ip saddr ${serviceAddress} ip daddr ${linkSubnet}.1 tcp dport { ${lib.concatMapStringsSep ", " toString hostTcpPorts} } accept
+        ''}iifname "${hostIf}" counter drop
       }
       chain output {
         type filter hook output priority -30; policy accept;
-        oifname "${hostIf}" counter drop
+        ${lib.optionalString (hostTcpPorts != [ ]) ''oifname "${hostIf}" ip daddr ${serviceAddress} ct state established,related accept
+        ''}oifname "${hostIf}" counter drop
       }
       chain forward {
         type filter hook forward priority -30; policy accept;
@@ -43,6 +47,7 @@ let
   down = pkgs.writeShellScript "${name}-routed-network-down" ''
     set -eu
     export PATH=/usr/bin
+    ${revokeHost}
     ip link del ${hostIf} 2>/dev/null || :
     nft delete table inet ${table} 2>/dev/null || :
   '';
@@ -57,6 +62,7 @@ let
     nft -c -f ${rules}
     nft -f ${rules}
     trap '${down}' ERR
+    ${allowHost}
     ip link add ${hostIf} type veth peer name ${peerIf}
     ip link set ${peerIf} netns "$pid"
     ip addr add ${linkSubnet}.1/30 dev ${hostIf}
@@ -65,6 +71,7 @@ let
     nsenter -t "$pid" -n ip addr add ${linkSubnet}.2/30 dev eth0
     nsenter -t "$pid" -n ip addr add ${serviceAddress}/32 dev eth0
     nsenter -t "$pid" -n ip link set eth0 up
+    nsenter -t "$pid" -n ip route add ${linkSubnet}.1/32 dev eth0 src ${serviceAddress}
     nsenter -t "$pid" -n ip route add default via ${linkSubnet}.1 src ${serviceAddress}
     ip route add ${serviceAddress}/32 dev ${hostIf}
     trap - ERR

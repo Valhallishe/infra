@@ -26,7 +26,7 @@ with transaction.atomic():
         provider.property_mappings.set(ScopeMapping.objects.filter(scope_name__in=["openid", "email", "profile"], managed__startswith="goauthentik.io/"))
         app, _ = Application.objects.update_or_create(
             slug="peertube",
-            defaults=dict(name=settings["displayName"], provider=provider, policy_engine_mode="all"),
+            defaults=dict(name=settings["displayName"], provider=provider, policy_engine_mode="any"),
         )
 
         access, _ = Group.objects.get_or_create(name=settings["accessGroup"])

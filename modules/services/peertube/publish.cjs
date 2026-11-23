@@ -29,7 +29,7 @@ async function register ({ registerHook }) {
       target,
       handler: async (result, { user }) => {
         if (!result?.accepted || await mayPublish(user)) return result
-        return { accepted: false, errorMessage: 'Publishing requires membership in PeerTube Publishers.' }
+        return { accepted: false, errorMessage: 'Publishing requires membership in peertube-publishers.' }
       }
     })
   }

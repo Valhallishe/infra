@@ -123,6 +123,11 @@ in
         };
         secretFile = ../../secrets/nixarchserver-immich.age;
       };
+      vpn-portal = {
+        overlayAddress = "10.1.2.9";
+        flows.http = { port = 80; overlay = true; };
+        storage.data.location = "${config.infra.systemStorage}/vpn-portal";
+      };
       # Existing installations published through Halo.
       nextcloud = {
         branding = "valhallishe";
