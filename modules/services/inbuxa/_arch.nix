@@ -92,6 +92,7 @@ let
       exit 0
     fi
 
+    "$0" stop
     podman pod create --name inbuxa --share net --network none \
       --userns keep-id:uid=2000,gid=2000 --sysctl net.ipv4.ip_unprivileged_port_start=0
     common=(--detach --pod inbuxa --pull=missing --restart=on-failure \

@@ -54,6 +54,7 @@ let
       if podman pod exists vpn-portal; then podman pod stop -t 30 vpn-portal; podman pod rm vpn-portal; fi
       exit 0
     fi
+    "$0" stop
     podman pod create --name vpn-portal --share net --network none \
       --userns keep-id:uid=1000,gid=1000 --sysctl net.ipv4.ip_unprivileged_port_start=0
     podman run --detach --pod vpn-portal --pull=never --name vpn-portal-app \

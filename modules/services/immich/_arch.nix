@@ -52,6 +52,7 @@ let
       exit 0
     fi
 
+    "$0" stop
     podman pod create --name immich --share net --network none \
       --sysctl net.ipv4.ip_unprivileged_port_start=0
 

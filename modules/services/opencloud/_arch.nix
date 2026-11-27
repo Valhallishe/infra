@@ -249,6 +249,7 @@ let
       exit 0
     fi
 
+    "$0" stop
     podman pod create --name opencloud --share net --network none \
       --userns keep-id:uid=1000,gid=1000 --sysctl net.ipv4.ip_unprivileged_port_start=0
     common=(--detach --pod opencloud --pull=missing --restart=on-failure \

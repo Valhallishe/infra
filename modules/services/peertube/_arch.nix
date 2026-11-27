@@ -182,6 +182,7 @@ let
       exit 0
     fi
 
+    "$0" stop
     podman pod create --name peertube --share net --network none \
       --userns keep-id:uid=999,gid=999 --sysctl net.ipv4.ip_unprivileged_port_start=0
     common=(--detach --pod peertube --pull=missing --restart=on-failure \
